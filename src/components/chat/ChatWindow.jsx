@@ -5,7 +5,10 @@ import Avatar from './Avatar';
 import MessageBubble from './MessageBubble';
 import { Send, Image, Paperclip, ArrowLeft, Phone, Video } from 'lucide-react';
 import ConversationSettingsMenu from './ConversationSettingsMenu';
+import ThemePickerModal from './ThemePickerModal';
+import NicknamesModal from './NicknamesModal';
 import { withAIQueue } from '@/lib/aiQueue';
+import { getThemeKey, setThemeKey, getTheme } from '@/lib/chatThemes';
 import moment from 'moment';
 import 'moment/locale/vi';
 moment.locale('vi');
@@ -17,9 +20,34 @@ export default function ChatWindow({ conversation, currentUserId, profile, profi
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
+  const [themeKey, setThemeKeyState] = useState(() => getThemeKey(conversation.id, conversation.theme));
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showNicknames, setShowNicknames] = useState(false);
+  const [nicknames, setNicknames] = useState(conversation.nicknames || {});
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
   const imageRef = useRef(null);
+
+  useEffect(() => {
+    setThemeKeyState(getThemeKey(conversation.id, conversation.theme));
+    setNicknames(conversation.nicknames || {});
+  }, [conversation.id, conversation.theme, conversation.nicknames]);
+
+  const theme = getTheme(themeKey);
+
+  const applyTheme = async (key) => {
+    setThemeKeyState(key);
+    setThemeKey(conversation.id, key);
+    setShowThemePicker(false);
+    try { await base44.entities.Conversation.update(conversation.id, { theme: key }); } catch (e) { console.error(e); }
+  };
+
+  const saveNicknames = async (next) => {
+    setNicknames(next);
+    setShowNicknames(false);
+    try { await base44.entities.Conversation.update(conversation.id, { nicknames: next }); } catch (e) { console.error(e); }
+  };
+
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -122,10 +150,12 @@ export default function ChatWindow({ conversation, currentUserId, profile, profi
     }
     const otherId = conversation.participant_ids?.find(id => id !== currentUserId);
     const p = profiles?.[otherId] || { display_name: 'Người dùng', avatar_url: '', is_online: false, last_active: null };
-    return { ...p, is_online: computeOnline(p) };
+    const nick = nicknames?.[otherId];
+    return { ...p, display_name: nick || p.display_name, is_online: computeOnline(p) };
   };
 
   const other = getOtherProfile();
+
 
   const sendMessage = async (content, type = 'text', fileUrl = '', fileName = '') => {
     if (!content && !fileUrl) return;
@@ -238,7 +268,9 @@ Trả lời:`
   };
 
   return (
+    <>
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
         <button onClick={onBack} className="md:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
@@ -286,6 +318,8 @@ Trả lời:`
             profile={profile}
             onViewInfo={onOpenInfo}
             onDeleted={onDeleteConversation}
+            onOpenTheme={() => setShowThemePicker(true)}
+            onOpenNicknames={() => setShowNicknames(true)}
           />
         </div>
       </div>
@@ -304,13 +338,15 @@ Trả lời:`
           </div>
         ) : (
           messages.map((msg, i) => (
-            <MessageBubble 
-              key={msg.id} 
-              message={msg} 
+            <MessageBubble
+              key={msg.id}
+              message={msg}
               isOwn={msg.sender_id === currentUserId}
               showAvatar={i === 0 || messages[i-1]?.sender_id !== msg.sender_id}
               currentUserId={currentUserId}
               participantCount={conversation.participant_ids?.length || 2}
+              themeKey={themeKey}
+              nicknames={nicknames}
             />
           ))
         )}
@@ -366,5 +402,24 @@ Trả lời:`
         </div>
       </div>
     </div>
+
+    {showThemePicker && (
+      <ThemePickerModal
+        currentKey={themeKey}
+        onSelect={applyTheme}
+        onClose={() => setShowThemePicker(false)}
+      />
+    )}
+    {showNicknames && (
+      <NicknamesModal
+        conversation={conversation}
+        profiles={profiles}
+        currentUserId={currentUserId}
+        onSave={saveNicknames}
+        onClose={() => setShowNicknames(false)}
+      />
+    )}
+    </>
   );
 }
+
