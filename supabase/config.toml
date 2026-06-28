@@ -1,0 +1,4 @@
+project_id = "kinbook"
+
+[functions.ai-chat]
+verify_jwt = true
