@@ -133,9 +133,11 @@ export type Database = {
           last_message_time: string | null
           muted_by: string[] | null
           name: string | null
+          nicknames: Json
           participant_ids: string[]
           participant_names: string[] | null
           read_by: Json | null
+          theme: string | null
           type: string
           updated_at: string
         }
@@ -152,9 +154,11 @@ export type Database = {
           last_message_time?: string | null
           muted_by?: string[] | null
           name?: string | null
+          nicknames?: Json
           participant_ids?: string[]
           participant_names?: string[] | null
           read_by?: Json | null
+          theme?: string | null
           type?: string
           updated_at?: string
         }
@@ -171,9 +175,11 @@ export type Database = {
           last_message_time?: string | null
           muted_by?: string[] | null
           name?: string | null
+          nicknames?: Json
           participant_ids?: string[]
           participant_names?: string[] | null
           read_by?: Json | null
+          theme?: string | null
           type?: string
           updated_at?: string
         }
@@ -232,6 +238,7 @@ export type Database = {
           file_url: string | null
           id: string
           is_recalled: boolean | null
+          reactions: Json
           read_by: string[] | null
           recalled_at: string | null
           sender_avatar: string | null
@@ -249,6 +256,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           is_recalled?: boolean | null
+          reactions?: Json
           read_by?: string[] | null
           recalled_at?: string | null
           sender_avatar?: string | null
@@ -266,6 +274,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           is_recalled?: boolean | null
+          reactions?: Json
           read_by?: string[] | null
           recalled_at?: string | null
           sender_avatar?: string | null
