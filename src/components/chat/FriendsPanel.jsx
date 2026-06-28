@@ -1,14 +1,21 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import Avatar from './Avatar';
-import { UserPlus, Check, X, Search } from 'lucide-react';
+import { UserPlus, Check, X, Search, MessageCircle, Users as UsersIcon, Mail } from 'lucide-react';
 
-export default function FriendsPanel({ currentUserId, profile }) {
+const TABS = [
+  { key: 'requests', label: 'Lời mời' },
+  { key: 'suggestions', label: 'Gợi ý' },
+  { key: 'friends', label: 'Bạn bè' },
+];
+
+export default function FriendsPanel({ currentUserId, profile, onStartChat }) {
   const [profiles, setProfiles] = useState([]);
   const [friendships, setFriendships] = useState([]);
   const [busyId, setBusyId] = useState(null);
   const [msg, setMsg] = useState('');
   const [q, setQ] = useState('');
+  const [tab, setTab] = useState('requests');
 
   const reload = useCallback(async () => {
     try {
@@ -27,13 +34,9 @@ export default function FriendsPanel({ currentUserId, profile }) {
   useEffect(() => {
     reload();
     const unsubF = base44.entities.Friendship.subscribe(() => reload());
-    return () => unsubF();
+    const unsubP = base44.entities.UserProfile.subscribe(() => reload());
+    return () => { unsubF(); unsubP(); };
   }, [reload]);
-
-  const profileMap = useMemo(
-    () => Object.fromEntries(profiles.map(p => [p.user_id, p])),
-    [profiles]
-  );
 
   const incomingRequests = useMemo(
     () => friendships.filter(f => f.to_user_id === currentUserId && f.status === 'pending'),
@@ -58,14 +61,25 @@ export default function FriendsPanel({ currentUserId, profile }) {
     return s;
   }, [friendships, currentUserId]);
 
+  const filterQ = (list) => {
+    if (!q.trim()) return list;
+    const qq = q.trim().toLowerCase();
+    return list.filter(p => (p.display_name || '').toLowerCase().includes(qq));
+  };
+
   const suggestions = useMemo(() => {
     const list = profiles.filter(p =>
       p.user_id && p.user_id !== currentUserId && !friendIds.has(p.user_id)
     );
-    if (!q.trim()) return list;
-    const qq = q.trim().toLowerCase();
-    return list.filter(p => (p.display_name || '').toLowerCase().includes(qq));
+    return filterQ(list);
+    // eslint-disable-next-line
   }, [profiles, currentUserId, friendIds, q]);
+
+  const friendsList = useMemo(() => {
+    const list = profiles.filter(p => friendIds.has(p.user_id));
+    return filterQ(list);
+    // eslint-disable-next-line
+  }, [profiles, friendIds, q]);
 
   const sendRequest = async (toUser) => {
     if (busyId || !currentUserId) return;
@@ -92,7 +106,7 @@ export default function FriendsPanel({ currentUserId, profile }) {
         from_user_name: profile?.display_name || 'User',
         from_user_avatar: profile?.avatar_url || '',
       });
-      setMsg('Đã gửi lời mời kết bạn!');
+      setMsg('Đã gửi lời mời!');
       reload();
     } catch (e) {
       console.error(e);
@@ -131,6 +145,17 @@ export default function FriendsPanel({ currentUserId, profile }) {
     }
   };
 
+  const renderUserRow = (u, action) => (
+    <div key={u.user_id || u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+      <Avatar src={u.avatar_url} name={u.display_name} size={44} />
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm dark:text-white truncate">{u.display_name || 'Người dùng'}</p>
+        {u.bio && <p className="text-xs text-gray-500 truncate">{u.bio}</p>}
+      </div>
+      {action}
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       <div className="p-4 border-b dark:border-gray-700">
@@ -144,20 +169,49 @@ export default function FriendsPanel({ currentUserId, profile }) {
             className="w-full pl-9 pr-3 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-sm dark:text-white outline-none"
           />
         </div>
+
+        <div className="flex gap-1 mt-3 p-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+          {TABS.map(t => {
+            const count = t.key === 'requests' ? incomingRequests.length
+              : t.key === 'friends' ? friendsList.length
+              : suggestions.length;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`flex-1 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                  active
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`}
+              >
+                {t.label}
+                {count > 0 && (
+                  <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-blue-100 dark:bg-blue-900/40' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {msg && (
         <div className="px-4 py-2 text-xs text-blue-600 dark:text-blue-400">{msg}</div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
-        {incomingRequests.length > 0 && (
-          <div className="p-3">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-1 mb-2">
-              LỜI MỜI KẾT BẠN ({incomingRequests.length})
-            </p>
-            {incomingRequests.map(fr => (
-              <div key={fr.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800">
+      <div className="flex-1 overflow-y-auto p-3">
+        {tab === 'requests' && (
+          <>
+            {incomingRequests.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 text-sm">
+                <Mail className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                Không có lời mời nào
+              </div>
+            ) : incomingRequests.map(fr => (
+              <div key={fr.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Avatar src={fr.from_user_avatar} name={fr.from_user_name} size={44} />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm dark:text-white truncate">{fr.from_user_name}</p>
@@ -168,35 +222,28 @@ export default function FriendsPanel({ currentUserId, profile }) {
                   disabled={busyId === fr.id}
                   className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full disabled:opacity-50"
                   title="Chấp nhận"
-                >
-                  <Check size={16} />
-                </button>
+                ><Check size={16} /></button>
                 <button
                   onClick={() => respond(fr, false)}
                   disabled={busyId === fr.id}
                   className="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 rounded-full disabled:opacity-50"
                   title="Từ chối"
-                >
-                  <X size={16} className="dark:text-white" />
-                </button>
+                ><X size={16} className="dark:text-white" /></button>
               </div>
             ))}
-          </div>
+          </>
         )}
 
-        <div className="p-3">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-1 mb-2">
-            GỢI Ý ({suggestions.length})
-          </p>
-          {suggestions.map(u => {
-            const sent = outgoingPendingIds.has(u.user_id);
-            return (
-              <div key={u.user_id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800">
-                <Avatar src={u.avatar_url} name={u.display_name} size={44} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm dark:text-white truncate">{u.display_name || 'Người dùng'}</p>
-                  {u.bio && <p className="text-xs text-gray-500 truncate">{u.bio}</p>}
-                </div>
+        {tab === 'suggestions' && (
+          <>
+            {suggestions.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 text-sm">
+                <UsersIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                Không có gợi ý
+              </div>
+            ) : suggestions.map(u => {
+              const sent = outgoingPendingIds.has(u.user_id);
+              return renderUserRow(u, (
                 <button
                   onClick={() => sendRequest(u)}
                   disabled={busyId === u.user_id || sent}
@@ -205,13 +252,28 @@ export default function FriendsPanel({ currentUserId, profile }) {
                   <UserPlus size={14} />
                   {sent ? 'Đã gửi' : 'Kết bạn'}
                 </button>
+              ));
+            })}
+          </>
+        )}
+
+        {tab === 'friends' && (
+          <>
+            {friendsList.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 text-sm">
+                <UsersIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                Chưa có bạn bè
               </div>
-            );
-          })}
-          {suggestions.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-6">Không có gợi ý</p>
-          )}
-        </div>
+            ) : friendsList.map(u => renderUserRow(u, (
+              <button
+                onClick={() => onStartChat?.(u.user_id)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+              >
+                <MessageCircle size={14} /> Nhắn
+              </button>
+            )))}
+          </>
+        )}
       </div>
     </div>
   );
