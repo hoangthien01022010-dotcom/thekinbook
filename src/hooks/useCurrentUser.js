@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
+
 
 export function useCurrentUser() {
   const [user, setUser] = useState(null);
@@ -16,13 +18,20 @@ export function useCurrentUser() {
         
         const profiles = await base44.entities.UserProfile.filter({ user_id: me.id });
         if (cancelled) return;
-        
+
+        // Check admin role from user_roles table
+        const { data: roleRows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', me.id);
+        const isAdmin = (roleRows || []).some(r => r.role === 'admin');
+
         if (profiles.length > 0) {
-          setProfile(profiles[0]);
+          setProfile({ ...profiles[0], is_admin: isAdmin });
           // Update online status
-          await base44.entities.UserProfile.update(profiles[0].id, { 
-            is_online: true, 
-            last_active: new Date().toISOString() 
+          await base44.entities.UserProfile.update(profiles[0].id, {
+            is_online: true,
+            last_active: new Date().toISOString()
           });
         } else {
           const newProfile = await base44.entities.UserProfile.create({
@@ -32,7 +41,7 @@ export function useCurrentUser() {
             is_online: true,
             last_active: new Date().toISOString()
           });
-          setProfile(newProfile);
+          setProfile({ ...newProfile, is_admin: isAdmin });
         }
       } catch (e) {
         // not logged in
