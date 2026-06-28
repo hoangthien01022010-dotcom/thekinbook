@@ -81,8 +81,8 @@ export default function NotificationsPanel({ currentUserId, onClose }) {
                 <p className="text-sm dark:text-white">
                   <span className="font-semibold">{n.title}</span>
                 </p>
-                {n.body && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.body}</p>}
-                <p className="text-xs text-gray-400 mt-1">{moment(n.created_date).fromNow()}</p>
+                {n.content && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.content}</p>}
+                <p className="text-xs text-gray-400 mt-1">{moment(n.created_date || n.created_at).fromNow()}</p>
               </div>
               {!n.is_read && <div className="w-2.5 h-2.5 rounded-full bg-blue-500 mt-2 shrink-0" />}
             </button>
