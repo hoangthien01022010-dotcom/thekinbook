@@ -226,19 +226,26 @@ async function invokeAIChat({ prompt, messages }) {
 
 async function uploadFile({ file }) {
   if (!file) throw new Error('No file');
-  const ext = file.name.split('.').pop();
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
   const path = `${crypto.randomUUID()}.${ext}`;
-  // Ensure bucket exists (best-effort, silent fail if already there)
   const { error } = await supabase.storage.from('uploads').upload(path, file, {
     cacheControl: '3600',
     upsert: false,
+    contentType: file.type || undefined,
   });
   if (error) {
     console.error('upload error:', error);
     throw error;
   }
-  const { data } = supabase.storage.from('uploads').getPublicUrl(path);
-  return { file_url: data.publicUrl };
+  // Bucket is private — issue a long-lived signed URL (10 years).
+  const { data, error: signErr } = await supabase.storage
+    .from('uploads')
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr) {
+    console.error('sign url error:', signErr);
+    throw signErr;
+  }
+  return { file_url: data.signedUrl };
 }
 
 const integrations = {
