@@ -10,10 +10,12 @@ const TABLE = {
   Conversation: 'conversations',
   Message: 'messages',
   Friendship: 'friendships',
+  FriendRequest: 'friendships',
   Notification: 'notifications',
   CallRoom: 'call_rooms',
   AISettings: 'ai_settings',
   Report: 'reports',
+  Post: 'posts',
 };
 
 // ---------------------------------------------------------------------------
