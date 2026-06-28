@@ -150,10 +150,12 @@ export default function ChatWindow({ conversation, currentUserId, profile, profi
     }
     const otherId = conversation.participant_ids?.find(id => id !== currentUserId);
     const p = profiles?.[otherId] || { display_name: 'Người dùng', avatar_url: '', is_online: false, last_active: null };
-    return { ...p, is_online: computeOnline(p) };
+    const nick = nicknames?.[otherId];
+    return { ...p, display_name: nick || p.display_name, is_online: computeOnline(p) };
   };
 
   const other = getOtherProfile();
+
 
   const sendMessage = async (content, type = 'text', fileUrl = '', fileName = '') => {
     if (!content && !fileUrl) return;
