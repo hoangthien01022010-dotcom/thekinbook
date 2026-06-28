@@ -16,85 +16,106 @@ export type Database = {
     Tables: {
       ai_settings: {
         Row: {
-          analysis_depth: number
+          ai_daily_count: number | null
+          ai_daily_date: string | null
+          analysis_depth: string | null
+          created_at: string
           created_date: string
-          daily_message_limit: number
-          deep_enabled: boolean
-          direct_enabled: boolean
-          fast_enabled: boolean
-          fast_max_words: number
+          daily_message_limit: number | null
+          deep_enabled: boolean | null
+          direct_enabled: boolean | null
+          fast_enabled: boolean | null
+          fast_max_words: number | null
           id: string
-          total_usage: number
+          total_usage: number | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          analysis_depth?: number
+          ai_daily_count?: number | null
+          ai_daily_date?: string | null
+          analysis_depth?: string | null
+          created_at?: string
           created_date?: string
-          daily_message_limit?: number
-          deep_enabled?: boolean
-          direct_enabled?: boolean
-          fast_enabled?: boolean
-          fast_max_words?: number
+          daily_message_limit?: number | null
+          deep_enabled?: boolean | null
+          direct_enabled?: boolean | null
+          fast_enabled?: boolean | null
+          fast_max_words?: number | null
           id?: string
-          total_usage?: number
+          total_usage?: number | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          analysis_depth?: number
+          ai_daily_count?: number | null
+          ai_daily_date?: string | null
+          analysis_depth?: string | null
+          created_at?: string
           created_date?: string
-          daily_message_limit?: number
-          deep_enabled?: boolean
-          direct_enabled?: boolean
-          fast_enabled?: boolean
-          fast_max_words?: number
+          daily_message_limit?: number | null
+          deep_enabled?: boolean | null
+          direct_enabled?: boolean | null
+          fast_enabled?: boolean | null
+          fast_max_words?: number | null
           id?: string
-          total_usage?: number
+          total_usage?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
       call_rooms: {
         Row: {
-          call_type: string
+          call_type: string | null
+          created_at: string
           created_date: string
+          ended_at: string | null
           host_id: string
           host_name: string | null
           id: string
           name: string | null
-          participant_cameras: Json
+          participant_cameras: Json | null
           participant_ids: string[]
-          participant_mics: Json
-          participant_names: string[]
+          participant_mics: Json | null
+          participant_names: string[] | null
           room_code: string
           started_at: string | null
-          status: string
+          status: string | null
         }
         Insert: {
-          call_type?: string
+          call_type?: string | null
+          created_at?: string
           created_date?: string
+          ended_at?: string | null
           host_id: string
           host_name?: string | null
           id?: string
           name?: string | null
-          participant_cameras?: Json
+          participant_cameras?: Json | null
           participant_ids?: string[]
-          participant_mics?: Json
-          participant_names?: string[]
+          participant_mics?: Json | null
+          participant_names?: string[] | null
           room_code: string
           started_at?: string | null
-          status?: string
+          status?: string | null
         }
         Update: {
-          call_type?: string
+          call_type?: string | null
+          created_at?: string
           created_date?: string
+          ended_at?: string | null
           host_id?: string
           host_name?: string | null
           id?: string
           name?: string | null
-          participant_cameras?: Json
+          participant_cameras?: Json | null
           participant_ids?: string[]
-          participant_mics?: Json
-          participant_names?: string[]
+          participant_mics?: Json | null
+          participant_names?: string[] | null
           room_code?: string
           started_at?: string | null
-          status?: string
+          status?: string | null
         }
         Relationships: []
       }
@@ -102,42 +123,57 @@ export type Database = {
         Row: {
           admin_id: string | null
           avatar_url: string | null
+          created_at: string
+          created_by: string | null
           created_date: string
+          deleted_by: string[] | null
           id: string
           last_message: string | null
           last_message_sender: string | null
           last_message_time: string | null
+          muted_by: string[] | null
           name: string | null
           participant_ids: string[]
-          participant_names: string[]
+          participant_names: string[] | null
+          read_by: Json | null
           type: string
           updated_at: string
         }
         Insert: {
           admin_id?: string | null
           avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
           created_date?: string
+          deleted_by?: string[] | null
           id?: string
           last_message?: string | null
           last_message_sender?: string | null
           last_message_time?: string | null
+          muted_by?: string[] | null
           name?: string | null
           participant_ids?: string[]
-          participant_names?: string[]
+          participant_names?: string[] | null
+          read_by?: Json | null
           type?: string
           updated_at?: string
         }
         Update: {
           admin_id?: string | null
           avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
           created_date?: string
+          deleted_by?: string[] | null
           id?: string
           last_message?: string | null
           last_message_sender?: string | null
           last_message_time?: string | null
+          muted_by?: string[] | null
           name?: string | null
           participant_ids?: string[]
-          participant_names?: string[]
+          participant_names?: string[] | null
+          read_by?: Json | null
           type?: string
           updated_at?: string
         }
@@ -145,25 +181,43 @@ export type Database = {
       }
       friendships: {
         Row: {
+          created_at: string
           created_date: string
+          from_user_avatar: string | null
+          from_user_id: string
+          from_user_name: string | null
           id: string
-          receiver_id: string
-          requester_id: string
           status: string
+          to_user_avatar: string | null
+          to_user_id: string
+          to_user_name: string | null
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           created_date?: string
+          from_user_avatar?: string | null
+          from_user_id: string
+          from_user_name?: string | null
           id?: string
-          receiver_id: string
-          requester_id: string
           status?: string
+          to_user_avatar?: string | null
+          to_user_id: string
+          to_user_name?: string | null
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           created_date?: string
+          from_user_avatar?: string | null
+          from_user_id?: string
+          from_user_name?: string | null
           id?: string
-          receiver_id?: string
-          requester_id?: string
           status?: string
+          to_user_avatar?: string | null
+          to_user_id?: string
+          to_user_name?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -171,53 +225,53 @@ export type Database = {
         Row: {
           content: string | null
           conversation_id: string
+          created_at: string
           created_date: string
-          deleted_by: string[]
+          deleted_by: string[] | null
           file_name: string | null
           file_url: string | null
           id: string
-          is_ai: boolean
-          is_recalled: boolean
-          read_by: string[]
+          is_recalled: boolean | null
+          read_by: string[] | null
           recalled_at: string | null
           sender_avatar: string | null
-          sender_id: string | null
+          sender_id: string
           sender_name: string | null
-          type: string
+          type: string | null
         }
         Insert: {
           content?: string | null
           conversation_id: string
+          created_at?: string
           created_date?: string
-          deleted_by?: string[]
+          deleted_by?: string[] | null
           file_name?: string | null
           file_url?: string | null
           id?: string
-          is_ai?: boolean
-          is_recalled?: boolean
-          read_by?: string[]
+          is_recalled?: boolean | null
+          read_by?: string[] | null
           recalled_at?: string | null
           sender_avatar?: string | null
-          sender_id?: string | null
+          sender_id: string
           sender_name?: string | null
-          type?: string
+          type?: string | null
         }
         Update: {
           content?: string | null
           conversation_id?: string
+          created_at?: string
           created_date?: string
-          deleted_by?: string[]
+          deleted_by?: string[] | null
           file_name?: string | null
           file_url?: string | null
           id?: string
-          is_ai?: boolean
-          is_recalled?: boolean
-          read_by?: string[]
+          is_recalled?: boolean | null
+          read_by?: string[] | null
           recalled_at?: string | null
           sender_avatar?: string | null
-          sender_id?: string | null
+          sender_id?: string
           sender_name?: string | null
-          type?: string
+          type?: string | null
         }
         Relationships: [
           {
@@ -231,36 +285,42 @@ export type Database = {
       }
       notifications: {
         Row: {
-          body: string | null
+          content: string | null
+          created_at: string
           created_date: string
           from_user_avatar: string | null
+          from_user_id: string | null
           from_user_name: string | null
           id: string
-          is_read: boolean
+          is_read: boolean | null
           related_id: string | null
           title: string | null
           type: string
           user_id: string
         }
         Insert: {
-          body?: string | null
+          content?: string | null
+          created_at?: string
           created_date?: string
           from_user_avatar?: string | null
+          from_user_id?: string | null
           from_user_name?: string | null
           id?: string
-          is_read?: boolean
+          is_read?: boolean | null
           related_id?: string | null
           title?: string | null
           type: string
           user_id: string
         }
         Update: {
-          body?: string | null
+          content?: string | null
+          created_at?: string
           created_date?: string
           from_user_avatar?: string | null
+          from_user_id?: string | null
           from_user_name?: string | null
           id?: string
-          is_read?: boolean
+          is_read?: boolean | null
           related_id?: string | null
           title?: string | null
           type?: string
@@ -268,111 +328,165 @@ export type Database = {
         }
         Relationships: []
       }
+      posts: {
+        Row: {
+          author_avatar: string | null
+          author_id: string
+          author_name: string | null
+          content: string
+          created_at: string
+          created_date: string
+          id: string
+          image_url: string | null
+          liked_by: string[] | null
+          likes_count: number
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_id: string
+          author_name?: string | null
+          content: string
+          created_at?: string
+          created_date?: string
+          id?: string
+          image_url?: string | null
+          liked_by?: string[] | null
+          likes_count?: number
+        }
+        Update: {
+          author_avatar?: string | null
+          author_id?: string
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          created_date?: string
+          id?: string
+          image_url?: string | null
+          liked_by?: string[] | null
+          likes_count?: number
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           action_taken: string | null
+          created_at: string
           created_date: string
           details: string | null
           id: string
-          reason: string
+          reason: string | null
           reported_user_id: string | null
           reported_user_name: string | null
           reporter_id: string
           reporter_name: string | null
-          status: string
+          status: string | null
         }
         Insert: {
           action_taken?: string | null
+          created_at?: string
           created_date?: string
           details?: string | null
           id?: string
-          reason: string
+          reason?: string | null
           reported_user_id?: string | null
           reported_user_name?: string | null
           reporter_id: string
           reporter_name?: string | null
-          status?: string
+          status?: string | null
         }
         Update: {
           action_taken?: string | null
+          created_at?: string
           created_date?: string
           details?: string | null
           id?: string
-          reason?: string
+          reason?: string | null
           reported_user_id?: string | null
           reported_user_name?: string | null
           reporter_id?: string
           reporter_name?: string | null
-          status?: string
+          status?: string | null
         }
         Relationships: []
       }
       user_profiles: {
         Row: {
-          ai_daily_count: number
-          ai_daily_date: string | null
           avatar_url: string | null
           ban_type: string | null
           ban_until: string | null
           bio: string | null
-          bot_persona: string | null
-          chat_disabled: boolean
+          chat_disabled: boolean | null
+          created_at: string
           created_date: string
-          display_name: string
+          display_name: string | null
           email: string | null
           id: string
-          is_admin: boolean
-          is_banned: boolean
-          is_bot: boolean
+          is_banned: boolean | null
           is_online: boolean | null
           last_active: string | null
+          status: string | null
           updated_at: string
           user_id: string
-          warnings: number
+          warnings: number | null
         }
         Insert: {
-          ai_daily_count?: number
-          ai_daily_date?: string | null
           avatar_url?: string | null
           ban_type?: string | null
           ban_until?: string | null
           bio?: string | null
-          bot_persona?: string | null
-          chat_disabled?: boolean
+          chat_disabled?: boolean | null
+          created_at?: string
           created_date?: string
-          display_name?: string
+          display_name?: string | null
           email?: string | null
           id?: string
-          is_admin?: boolean
-          is_banned?: boolean
-          is_bot?: boolean
+          is_banned?: boolean | null
           is_online?: boolean | null
           last_active?: string | null
+          status?: string | null
           updated_at?: string
           user_id: string
-          warnings?: number
+          warnings?: number | null
         }
         Update: {
-          ai_daily_count?: number
-          ai_daily_date?: string | null
           avatar_url?: string | null
           ban_type?: string | null
           ban_until?: string | null
           bio?: string | null
-          bot_persona?: string | null
-          chat_disabled?: boolean
+          chat_disabled?: boolean | null
+          created_at?: string
           created_date?: string
-          display_name?: string
+          display_name?: string | null
           email?: string | null
           id?: string
-          is_admin?: boolean
-          is_banned?: boolean
-          is_bot?: boolean
+          is_banned?: boolean | null
           is_online?: boolean | null
           last_active?: string | null
+          status?: string | null
           updated_at?: string
           user_id?: string
-          warnings?: number
+          warnings?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -381,10 +495,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: { Args: { _uid: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conv: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -511,6 +635,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
