@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { MoreVertical, Info, BellOff, Bell, Flag, Trash2, X } from 'lucide-react';
+import { MoreVertical, Info, BellOff, Bell, Flag, Trash2, X, Palette, Tag } from 'lucide-react';
 
-export default function ConversationSettingsMenu({ conversation, currentUserId, profile, onViewInfo, onDeleted }) {
+export default function ConversationSettingsMenu({ conversation, currentUserId, profile, onViewInfo, onDeleted, onOpenTheme, onOpenNicknames }) {
   const [open, setOpen] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [muted, setMuted] = useState(conversation.muted || false);
@@ -38,7 +38,6 @@ export default function ConversationSettingsMenu({ conversation, currentUserId, 
       const otherIdx = conversation.participant_ids?.findIndex(id => id !== currentUserId);
       const otherId = isGroup ? '' : conversation.participant_ids?.[otherIdx];
       const otherName = isGroup ? conversation.name : conversation.participant_names?.[otherIdx];
-
       await base44.entities.Report.create({
         reporter_id: currentUserId,
         reporter_name: profile?.display_name,
@@ -49,17 +48,6 @@ export default function ConversationSettingsMenu({ conversation, currentUserId, 
         status: 'pending',
         action_taken: 'none'
       });
-
-      const admins = await base44.entities.User.list();
-      for (const admin of (admins || []).filter(u => u.role === 'admin' && u.id !== currentUserId)) {
-        await base44.entities.Notification.create({
-          user_id: admin.id,
-          type: 'system',
-          title: 'Báo cáo mới',
-          body: `${profile?.display_name} đã báo cáo ${otherName || 'người dùng'} vì: ${reportReason}`,
-          from_user_name: profile?.display_name
-        });
-      }
     } catch (e) {
       console.error(e);
     }
@@ -74,13 +62,19 @@ export default function ConversationSettingsMenu({ conversation, currentUserId, 
     if (!confirm('Xóa đoạn chat này? Toàn bộ tin nhắn sẽ bị xóa vĩnh viễn.')) return;
     setOpen(false);
     try {
-      await base44.entities.Message.deleteMany({ conversation_id: conversation.id });
       await base44.entities.Conversation.delete(conversation.id);
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     if (onDeleted) onDeleted();
   };
+
+  const Item = ({ icon: Icon, label, onClick, color = 'text-blue-500', text = 'dark:text-white' }) => (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${text} transition-colors`}
+    >
+      <Icon size={16} className={color} /> {label}
+    </button>
+  );
 
   return (
     <div className="relative" ref={ref}>
@@ -92,27 +86,13 @@ export default function ConversationSettingsMenu({ conversation, currentUserId, 
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-xl border dark:border-gray-700 py-1 min-w-[200px] overflow-hidden">
-          <button
-            onClick={() => { onViewInfo(); setOpen(false); }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white transition-colors"
-          >
-            <Info size={16} className="text-blue-500" /> Xem thông tin
-          </button>
-          <button
-            onClick={toggleMute}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white transition-colors"
-          >
-            {muted ? <BellOff size={16} className="text-gray-500" /> : <Bell size={16} className="text-blue-500" />}
-            {muted ? 'Bật thông báo' : 'Tắt thông báo'}
-          </button>
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-xl border dark:border-gray-700 py-1 min-w-[220px] overflow-hidden">
+          <Item icon={Info} label="Xem thông tin" onClick={() => { onViewInfo?.(); setOpen(false); }} />
+          <Item icon={Palette} label="Đổi chủ đề" color="text-purple-500" onClick={() => { onOpenTheme?.(); setOpen(false); }} />
+          <Item icon={muted ? BellOff : Bell} label={muted ? 'Bật thông báo' : 'Tắt thông báo'} color={muted ? 'text-gray-500' : 'text-blue-500'} onClick={toggleMute} />
+          <Item icon={Tag} label="Biệt danh" color="text-emerald-500" onClick={() => { onOpenNicknames?.(); setOpen(false); }} />
           {conversation.type === 'direct' && (
-            <button
-              onClick={() => { setShowReport(true); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white transition-colors"
-            >
-              <Flag size={16} className="text-orange-500" /> Báo cáo
-            </button>
+            <Item icon={Flag} label="Báo cáo" color="text-orange-500" onClick={() => { setShowReport(true); setOpen(false); }} />
           )}
           <div className="my-1 border-t dark:border-gray-700" />
           <button
@@ -134,32 +114,26 @@ export default function ConversationSettingsMenu({ conversation, currentUserId, 
               </button>
             </div>
             <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium dark:text-gray-300 mb-1.5 block">Lý do báo cáo</label>
-                <select
-                  value={reportReason}
-                  onChange={e => setReportReason(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border dark:border-gray-600 rounded-lg text-sm outline-none"
-                >
-                  <option value="">Chọn lý do...</option>
-                  <option value="Spam">Tin nhắn rác (Spam)</option>
-                  <option value="Harassment">Quấy rối, bắt nạt</option>
-                  <option value="Hate speech">Phát ngôn thù địch</option>
-                  <option value="Inappropriate content">Nội dung không phù hợp</option>
-                  <option value="Scam">Lừa đảo</option>
-                  <option value="Other">Khác</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium dark:text-gray-300 mb-1.5 block">Chi tiết (không bắt buộc)</label>
-                <textarea
-                  value={reportDetails}
-                  onChange={e => setReportDetails(e.target.value)}
-                  placeholder="Mô tả chi tiết vấn đề..."
-                  rows={3}
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border dark:border-gray-600 rounded-lg text-sm outline-none resize-none"
-                />
-              </div>
+              <select
+                value={reportReason}
+                onChange={e => setReportReason(e.target.value)}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border dark:border-gray-600 rounded-lg text-sm outline-none"
+              >
+                <option value="">Chọn lý do...</option>
+                <option value="Spam">Tin nhắn rác (Spam)</option>
+                <option value="Harassment">Quấy rối, bắt nạt</option>
+                <option value="Hate speech">Phát ngôn thù địch</option>
+                <option value="Inappropriate content">Nội dung không phù hợp</option>
+                <option value="Scam">Lừa đảo</option>
+                <option value="Other">Khác</option>
+              </select>
+              <textarea
+                value={reportDetails}
+                onChange={e => setReportDetails(e.target.value)}
+                placeholder="Mô tả chi tiết..."
+                rows={3}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 dark:text-white border dark:border-gray-600 rounded-lg text-sm outline-none resize-none"
+              />
               <button
                 onClick={submitReport}
                 disabled={!reportReason || submitting}
