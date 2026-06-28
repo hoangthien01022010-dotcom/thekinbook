@@ -48,11 +48,46 @@ export default function ProfilePanel({ user, profile, setProfile, onClose, onAdm
     setSaving(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (profile?.id) {
-      base44.entities.UserProfile.update(profile.id, { is_online: false, last_active: new Date().toISOString() }).catch(() => {});
+      try {
+        await base44.entities.UserProfile.update(profile.id, { is_online: false, last_active: new Date().toISOString() });
+      } catch {}
     }
-    base44.auth.logout('/login');
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+    setPwMsg(null);
+    if (!oldPw || !newPw) {
+      setPwMsg({ ok: false, text: 'Vui lòng nhập đầy đủ mật khẩu' });
+      return;
+    }
+    if (newPw.length < 6) {
+      setPwMsg({ ok: false, text: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+      return;
+    }
+    setPwBusy(true);
+    try {
+      // Verify current password by re-authenticating
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: user?.email,
+        password: oldPw,
+      });
+      if (signErr) throw new Error('Mật khẩu cũ không đúng');
+      const { error: upErr } = await supabase.auth.updateUser({ password: newPw });
+      if (upErr) throw upErr;
+      setPwMsg({ ok: true, text: 'Đổi mật khẩu thành công!' });
+      setOldPw('');
+      setNewPw('');
+      setTimeout(() => setShowPw(false), 1500);
+    } catch (err) {
+      setPwMsg({ ok: false, text: err?.message || 'Đổi mật khẩu thất bại' });
+    } finally {
+      setPwBusy(false);
+    }
   };
 
   const isAdmin = user?.role === 'admin';
