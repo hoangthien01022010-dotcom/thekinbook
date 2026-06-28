@@ -336,13 +336,15 @@ Trả lời:`
           </div>
         ) : (
           messages.map((msg, i) => (
-            <MessageBubble 
-              key={msg.id} 
-              message={msg} 
+            <MessageBubble
+              key={msg.id}
+              message={msg}
               isOwn={msg.sender_id === currentUserId}
               showAvatar={i === 0 || messages[i-1]?.sender_id !== msg.sender_id}
               currentUserId={currentUserId}
               participantCount={conversation.participant_ids?.length || 2}
+              themeKey={themeKey}
+              nicknames={nicknames}
             />
           ))
         )}
