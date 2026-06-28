@@ -400,5 +400,24 @@ Trả lời:`
         </div>
       </div>
     </div>
+
+    {showThemePicker && (
+      <ThemePickerModal
+        currentKey={themeKey}
+        onSelect={applyTheme}
+        onClose={() => setShowThemePicker(false)}
+      />
+    )}
+    {showNicknames && (
+      <NicknamesModal
+        conversation={conversation}
+        profiles={profiles}
+        currentUserId={currentUserId}
+        onSave={saveNicknames}
+        onClose={() => setShowNicknames(false)}
+      />
+    )}
+    </>
   );
 }
+
