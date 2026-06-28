@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import Avatar from './Avatar';
-import { ArrowLeft, Camera, Sun, Moon, LogOut, Shield, Code, Bot, Download } from 'lucide-react';
+import { ArrowLeft, Camera, Sun, Moon, LogOut, Shield, Code, Bot, Download, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/lib/ThemeContext';
 
@@ -12,6 +13,11 @@ export default function ProfilePanel({ user, profile, setProfile, onClose, onAdm
   const [editingBio, setEditingBio] = useState(false);
   const [newBio, setNewBio] = useState(profile?.bio || '');
   const [saving, setSaving] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [oldPw, setOldPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMsg, setPwMsg] = useState(null); // {ok, text}
 
   const updateAvatar = async (e) => {
     const file = e.target.files[0];
