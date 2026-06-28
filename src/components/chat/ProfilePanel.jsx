@@ -199,6 +199,46 @@ export default function ProfilePanel({ user, profile, setProfile, onClose, onAdm
             </Link>
           )}
 
+          {/* Change password */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+            <button
+              onClick={() => { setShowPw(v => !v); setPwMsg(null); }}
+              className="w-full flex items-center gap-3 text-left"
+            >
+              <KeyRound size={20} className="text-blue-500" />
+              <span className="font-medium dark:text-white flex-1">Đổi mật khẩu</span>
+              <span className="text-xs text-gray-500">{showPw ? 'Đóng' : 'Mở'}</span>
+            </button>
+            {showPw && (
+              <form onSubmit={changePassword} className="mt-3 space-y-2">
+                <input
+                  type="password"
+                  placeholder="Mật khẩu cũ"
+                  value={oldPw}
+                  onChange={e => setOldPw(e.target.value)}
+                  className="w-full px-3 py-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-sm outline-none"
+                />
+                <input
+                  type="password"
+                  placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+                  value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  className="w-full px-3 py-2 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-sm outline-none"
+                />
+                {pwMsg && (
+                  <p className={`text-xs ${pwMsg.ok ? 'text-green-600' : 'text-red-600'}`}>{pwMsg.text}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={pwBusy}
+                  className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded disabled:opacity-60"
+                >
+                  {pwBusy ? 'Đang đổi...' : 'Đổi mật khẩu'}
+                </button>
+              </form>
+            )}
+          </div>
+
           {/* Logout */}
           <button onClick={handleLogout} className="w-full flex items-center gap-3 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-red-600">
             <LogOut size={20} />
