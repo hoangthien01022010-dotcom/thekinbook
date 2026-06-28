@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
+
 
 export function useCurrentUser() {
   const [user, setUser] = useState(null);
