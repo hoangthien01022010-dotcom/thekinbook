@@ -316,6 +316,8 @@ Trả lời:`
             profile={profile}
             onViewInfo={onOpenInfo}
             onDeleted={onDeleteConversation}
+            onOpenTheme={() => setShowThemePicker(true)}
+            onOpenNicknames={() => setShowNicknames(true)}
           />
         </div>
       </div>
