@@ -268,7 +268,9 @@ Trả lời:`
   };
 
   return (
+    <>
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
         <button onClick={onBack} className="md:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
