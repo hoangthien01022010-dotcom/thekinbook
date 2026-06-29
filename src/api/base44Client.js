@@ -204,7 +204,7 @@ const auth = {
 //   - Core.InvokeLLM -> Lovable AI via edge function
 //   - Core.UploadFile -> Supabase Storage (bucket: 'uploads')
 // ---------------------------------------------------------------------------
-async function invokeAIChat({ prompt, messages }) {
+async function invokeAIChat({ prompt, messages, system, max_tokens, model }) {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
   const { data: { session } } = await supabase.auth.getSession();
   const res = await fetch(url, {
@@ -214,7 +214,7 @@ async function invokeAIChat({ prompt, messages }) {
       Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     },
-    body: JSON.stringify({ prompt, messages }),
+    body: JSON.stringify({ prompt, messages, system, max_tokens, model }),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -224,27 +224,44 @@ async function invokeAIChat({ prompt, messages }) {
   return data.text || data.response || '';
 }
 
-async function uploadFile({ file }) {
+async function uploadFile({ file, onProgress }) {
   if (!file) throw new Error('No file');
   const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
   const path = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('uploads').upload(path, file, {
-    cacheControl: '3600',
-    upsert: false,
-    contentType: file.type || undefined,
-  });
-  if (error) {
-    console.error('upload error:', error);
-    throw error;
+
+  // Use signed upload URL + XHR so we can report progress.
+  const { data: signed, error: signedErr } = await supabase
+    .storage.from('uploads').createSignedUploadUrl(path);
+
+  if (signedErr || !signed?.signedUrl) {
+    // Fallback: direct upload without progress.
+    const { error } = await supabase.storage.from('uploads').upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type || undefined,
+    });
+    if (error) throw error;
+  } else {
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', signed.signedUrl, true);
+      if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+      xhr.setRequestHeader('x-upsert', 'false');
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable && typeof onProgress === 'function') {
+          onProgress(Math.round((ev.loaded / ev.total) * 100));
+        }
+      };
+      xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve() : reject(new Error(`Upload failed: ${xhr.status} ${xhr.responseText}`));
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(file);
+    });
   }
+
   // Bucket is private — issue a long-lived signed URL (10 years).
-  const { data, error: signErr } = await supabase.storage
+  const { data, error: urlErr } = await supabase.storage
     .from('uploads')
     .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-  if (signErr) {
-    console.error('sign url error:', signErr);
-    throw signErr;
-  }
+  if (urlErr) throw urlErr;
+  if (typeof onProgress === 'function') onProgress(100);
   return { file_url: data.signedUrl };
 }
 
