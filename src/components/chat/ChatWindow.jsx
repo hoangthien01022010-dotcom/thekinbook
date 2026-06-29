@@ -9,6 +9,7 @@ import ThemePickerModal from './ThemePickerModal';
 import NicknamesModal from './NicknamesModal';
 import { withAIQueue } from '@/lib/aiQueue';
 import { getThemeKey, setThemeKey, getTheme } from '@/lib/chatThemes';
+import { compressImage } from '@/lib/imageCompress';
 import moment from 'moment';
 import 'moment/locale/vi';
 moment.locale('vi');
