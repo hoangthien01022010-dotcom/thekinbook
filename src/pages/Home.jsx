@@ -160,7 +160,7 @@ export default function Home() {
   }
 
   const navItems = [
-    { key: 'chats', icon: MessageCircle, label: 'Chat' },
+    { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
     { key: 'feed', icon: Newspaper, label: 'Bảng tin' },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
     { key: 'bot', icon: Bot, label: 'AI Bot' },
