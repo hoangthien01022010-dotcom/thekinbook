@@ -9,6 +9,7 @@ import ThemePickerModal from './ThemePickerModal';
 import NicknamesModal from './NicknamesModal';
 import { withAIQueue } from '@/lib/aiQueue';
 import { getThemeKey, setThemeKey, getTheme } from '@/lib/chatThemes';
+import { compressImage } from '@/lib/imageCompress';
 import moment from 'moment';
 import 'moment/locale/vi';
 moment.locale('vi');
@@ -24,6 +25,7 @@ export default function ChatWindow({ conversation, currentUserId, profile, profi
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showNicknames, setShowNicknames] = useState(false);
   const [nicknames, setNicknames] = useState(conversation.nicknames || {});
+  const [uploadProgress, setUploadProgress] = useState(null); // null | { name, pct }
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
   const imageRef = useRef(null);
@@ -252,24 +254,35 @@ Trả lời:`
   };
 
   const handleFileUpload = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const raw = e.target.files[0];
+    if (!raw) return;
     setSending(true);
+    setUploadProgress({ name: raw.name, pct: 0 });
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const msgType = type === 'image' ? 'image' : (file.type.startsWith('video/') ? 'video' : 'file');
+      let file = raw;
+      if (type === 'image' && raw.type?.startsWith('image/')) {
+        file = await compressImage(raw);
+      }
+      const { file_url } = await base44.integrations.Core.UploadFile({
+        file,
+        onProgress: (pct) => setUploadProgress((p) => p ? { ...p, pct } : p),
+      });
+      const msgType = type === 'image'
+        ? 'image'
+        : (file.type?.startsWith('video/') ? 'video' : 'file');
       await sendMessage('', msgType, file_url, file.name);
     } catch (err) {
       console.error(err);
     } finally {
       setSending(false);
+      setUploadProgress(null);
       e.target.value = '';
     }
   };
 
   return (
     <>
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900" style={{ minHeight: '100dvh' }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -352,6 +365,19 @@ Trả lời:`
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Upload progress */}
+      {uploadProgress && (
+        <div className="px-4 py-2 border-t dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="truncate text-blue-700 dark:text-blue-200">📤 Đang tải: {uploadProgress.name}</span>
+            <span className="text-blue-700 dark:text-blue-200 font-mono">{uploadProgress.pct}%</span>
+          </div>
+          <div className="h-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all" style={{ width: `${uploadProgress.pct}%` }} />
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="px-3 py-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">

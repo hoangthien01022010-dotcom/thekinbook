@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import ConversationList from '@/components/chat/ConversationList';
@@ -13,6 +13,7 @@ import ConversationInfo from '@/components/chat/ConversationInfo';
 import SocialFeed from '@/components/social/SocialFeed';
 import { MessageCircle, Users, Bell, Settings, Bot, Shield, Newspaper } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { notifyNewMessage, notifyGeneric, ensureNotificationPermission } from '@/lib/notificationService';
 
 export default function Home() {
   const { user, profile, setProfile, loading } = useCurrentUser();
@@ -24,10 +25,21 @@ export default function Home() {
   const [showConvInfo, setShowConvInfo] = useState(false);
   const [profiles, setProfiles] = useState({});
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
   const [mobileView, setMobileView] = useState('list');
+  const seenNotifIds = useRef(new Set());
+  const seenMsgIds = useRef(new Set());
+  const bootRef = useRef(true);
+  const selectedConvRef = useRef(null);
+  const profilesRef = useRef({});
+
+  useEffect(() => { selectedConvRef.current = selectedConv; }, [selectedConv]);
+  useEffect(() => { profilesRef.current = profiles; }, [profiles]);
 
   useEffect(() => {
     if (!user) return;
+    ensureNotificationPermission();
+
     const loadProfiles = async () => {
       const all = await base44.entities.UserProfile.list('-created_date', 500);
       const map = {};
@@ -35,14 +47,62 @@ export default function Home() {
       setProfiles(map);
     };
     loadProfiles();
+
     const loadNotifs = async () => {
       const notifs = await base44.entities.Notification.filter({ user_id: user.id, is_read: false });
       setUnreadNotifs(notifs.length);
+      notifs.forEach(n => seenNotifIds.current.add(n.id));
+    };
+    const loadUnreadChats = async () => {
+      try {
+        const convs = await base44.entities.Conversation.list('-last_message_time', 200);
+        let count = 0;
+        for (const c of convs) {
+          if (!c.participant_ids?.includes(user.id)) continue;
+          if (c.last_message_sender && c.last_message_sender !== user.id) {
+            const unreadKey = c.unread_by || [];
+            // Heuristic: count any conv whose last sender isn't me and I'm in unread_by (or no read flag)
+            if (Array.isArray(unreadKey) ? unreadKey.includes(user.id) : true) count++;
+          }
+        }
+        setUnreadChats(count);
+      } catch (e) { /* ignore */ }
     };
     loadNotifs();
+    loadUnreadChats();
+    // First snapshot done — subsequent realtime events should fire toasts.
+    setTimeout(() => { bootRef.current = false; }, 1500);
+
     const u1 = base44.entities.UserProfile.subscribe(() => loadProfiles());
-    const u2 = base44.entities.Notification.subscribe(() => loadNotifs());
-    return () => { u1(); u2(); };
+    const u2 = base44.entities.Notification.subscribe((evt) => {
+      loadNotifs();
+      if (bootRef.current) return;
+      const n = evt?.data;
+      if (!n || n.user_id !== user.id || n.is_read) return;
+      if (seenNotifIds.current.has(n.id)) return;
+      seenNotifIds.current.add(n.id);
+      notifyGeneric(n.title || '🔔 Thông báo mới', n.body || n.content || '');
+    });
+    const u3 = base44.entities.Message.subscribe((evt) => {
+      const m = evt?.data;
+      if (!m || evt.type !== 'INSERT') return;
+      if (m.sender_id === user.id) return;
+      if (seenMsgIds.current.has(m.id)) return;
+      seenMsgIds.current.add(m.id);
+      // If chat is currently open & visible, don't toast — ChatWindow handles read
+      const openId = selectedConvRef.current?.id;
+      const isOpen = openId && openId === m.conversation_id && document.visibilityState === 'visible';
+      if (isOpen) return;
+      setUnreadChats(c => c + 1);
+      if (bootRef.current) return;
+      const sender = profilesRef.current?.[m.sender_id];
+      notifyNewMessage({
+        from: m.sender_name || sender?.display_name || 'Bạn bè',
+        content: m.content || (m.type === 'image' ? '📷 Ảnh' : m.type === 'file' ? '📎 Tệp' : ''),
+        avatar: sender?.avatar_url,
+      });
+    });
+    return () => { u1(); u2(); u3(); };
   }, [user?.id]);
 
   const selectConversation = (conv) => {
@@ -100,7 +160,7 @@ export default function Home() {
   }
 
   const navItems = [
-    { key: 'chats', icon: MessageCircle, label: 'Chat' },
+    { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
     { key: 'feed', icon: Newspaper, label: 'Bảng tin' },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
     { key: 'bot', icon: Bot, label: 'AI Bot' },
@@ -152,7 +212,8 @@ export default function Home() {
                   onClick={() => {
                     if (item.key === 'admin') { navigate('/admin'); return; }
                     setActiveTab(item.key);
-                    if (item.key!== 'chats') setMobileView('list');
+                    if (item.key === 'chats') setUnreadChats(0);
+                    if (item.key !== 'chats') setMobileView('list');
                   }}
                   className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
                     isActive? 'text-blue-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
