@@ -1,5 +1,4 @@
-// Lovable AI chat endpoint
-// Calls the Lovable AI Gateway and streams a complete response back.
+// Lovable AI chat endpoint — single ViBai persona, generous output budget.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const CORS = {
@@ -12,7 +11,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
-    const { prompt, messages, model } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { prompt, messages, model, max_tokens, system } = body || {};
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "Missing LOVABLE_API_KEY" }), {
@@ -22,6 +22,9 @@ Deno.serve(async (req) => {
     }
 
     const chatMessages: Array<{ role: string; content: string }> = [];
+    if (typeof system === "string" && system.trim()) {
+      chatMessages.push({ role: "system", content: system });
+    }
     if (Array.isArray(messages) && messages.length) {
       for (const m of messages) {
         if (!m || !m.content) continue;
@@ -48,6 +51,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: model || "google/gemini-2.5-flash",
         messages: chatMessages,
+        max_tokens: Math.min(Math.max(Number(max_tokens) || 4096, 256), 8192),
       }),
     });
 
