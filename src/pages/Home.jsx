@@ -212,7 +212,8 @@ export default function Home() {
                   onClick={() => {
                     if (item.key === 'admin') { navigate('/admin'); return; }
                     setActiveTab(item.key);
-                    if (item.key!== 'chats') setMobileView('list');
+                    if (item.key === 'chats') setUnreadChats(0);
+                    if (item.key !== 'chats') setMobileView('list');
                   }}
                   className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
                     isActive? 'text-blue-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
