@@ -282,7 +282,7 @@ Trả lời:`
 
   return (
     <>
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900" style={{ minHeight: '100dvh' }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
