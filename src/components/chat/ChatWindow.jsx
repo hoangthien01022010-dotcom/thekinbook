@@ -254,17 +254,28 @@ Trả lời:`
   };
 
   const handleFileUpload = async (e, type) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const raw = e.target.files[0];
+    if (!raw) return;
     setSending(true);
+    setUploadProgress({ name: raw.name, pct: 0 });
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const msgType = type === 'image' ? 'image' : (file.type.startsWith('video/') ? 'video' : 'file');
+      let file = raw;
+      if (type === 'image' && raw.type?.startsWith('image/')) {
+        file = await compressImage(raw);
+      }
+      const { file_url } = await base44.integrations.Core.UploadFile({
+        file,
+        onProgress: (pct) => setUploadProgress((p) => p ? { ...p, pct } : p),
+      });
+      const msgType = type === 'image'
+        ? 'image'
+        : (file.type?.startsWith('video/') ? 'video' : 'file');
       await sendMessage('', msgType, file_url, file.name);
     } catch (err) {
       console.error(err);
     } finally {
       setSending(false);
+      setUploadProgress(null);
       e.target.value = '';
     }
   };
