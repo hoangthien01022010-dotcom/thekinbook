@@ -25,6 +25,7 @@ export default function ChatWindow({ conversation, currentUserId, profile, profi
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showNicknames, setShowNicknames] = useState(false);
   const [nicknames, setNicknames] = useState(conversation.nicknames || {});
+  const [uploadProgress, setUploadProgress] = useState(null); // null | { name, pct }
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
   const imageRef = useRef(null);
