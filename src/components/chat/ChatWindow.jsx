@@ -366,6 +366,19 @@ Trả lời:`
         <div ref={bottomRef} />
       </div>
 
+      {/* Upload progress */}
+      {uploadProgress && (
+        <div className="px-4 py-2 border-t dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="truncate text-blue-700 dark:text-blue-200">📤 Đang tải: {uploadProgress.name}</span>
+            <span className="text-blue-700 dark:text-blue-200 font-mono">{uploadProgress.pct}%</span>
+          </div>
+          <div className="h-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all" style={{ width: `${uploadProgress.pct}%` }} />
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="px-3 py-2 border-t dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="flex items-end gap-2">
