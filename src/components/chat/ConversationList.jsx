@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import Avatar from './Avatar';
-import { Search, Plus, Users, MessageCircle, Phone } from 'lucide-react';
+import { Search, Users, MessageCircle, Sparkles } from 'lucide-react';
 import moment from 'moment';
 import 'moment/locale/vi';
 moment.locale('vi');
-import { useNavigate } from 'react-router-dom';
+
 
 export default function ConversationList({ currentUserId, profile, selectedId, onSelect, onNewChat, onNewGroup }) {
   const navigate = useNavigate();
