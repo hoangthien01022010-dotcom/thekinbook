@@ -19,7 +19,8 @@ export default function Home() {
   const { user, profile, setProfile, loading } = useCurrentUser();
   const navigate = useNavigate();
   const [selectedConv, setSelectedConv] = useState(null);
-  const [activeTab, setActiveTab] = useState('chats');
+  const [activeTab, setActiveTab] = useState('feed');
+  const [vibaiOpen, setVibaiOpen] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [showConvInfo, setShowConvInfo] = useState(false);
