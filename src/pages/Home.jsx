@@ -161,13 +161,12 @@ export default function Home() {
   }
 
   const navItems = [
+    { key: 'feed', icon: Newspaper, label: 'Bảng tin', iconOnly: true },
     { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
-    { key: 'feed', icon: Newspaper, label: 'Bảng tin' },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
-    { key: 'bot', icon: Bot, label: 'AI Bot' },
     { key: 'notifications', icon: Bell, label: 'Thông báo', badge: unreadNotifs },
     { key: 'profile', icon: Settings, label: 'Cài đặt' },
- ...(profile?.is_admin? [{ key: 'admin', icon: Shield, label: 'Quản trị' }] : []),
+    ...(profile?.is_admin ? [{ key: 'admin', icon: Shield, label: 'Quản trị' }] : []),
   ];
 
   const renderSidebar = () => {
@@ -176,8 +175,6 @@ export default function Home() {
         return <SocialFeed />;
       case 'friends':
         return <FriendsPanel currentUserId={user.id} profile={profile} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} onStartChat={startChatWith} />;
-      case 'bot':
-        return <AIBotChat currentUserId={user.id} profile={profile} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} />;
       case 'notifications':
         return <NotificationsPanel currentUserId={user.id} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} />;
       case 'profile':
@@ -187,10 +184,16 @@ export default function Home() {
           <ConversationList
             currentUserId={user.id}
             profile={profile}
-            selectedId={selectedConv?.id}
-            onSelect={selectConversation}
+            selectedId={vibaiOpen ? 'vibai' : selectedConv?.id}
+            onSelect={(c) => { setVibaiOpen(false); selectConversation(c); }}
             onNewChat={() => setShowNewChat(true)}
             onNewGroup={() => setShowNewGroup(true)}
+            onOpenVibai={() => {
+              setVibaiOpen(true);
+              setSelectedConv(null);
+              setMobileView('chat');
+              setActiveTab('chats');
+            }}
           />
         );
     }
