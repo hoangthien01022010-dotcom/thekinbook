@@ -11,7 +11,7 @@ import NewChatModal from '@/components/chat/NewChatModal';
 import NewGroupModal from '@/components/chat/NewGroupModal';
 import ConversationInfo from '@/components/chat/ConversationInfo';
 import SocialFeed from '@/components/social/SocialFeed';
-import { MessageCircle, Users, Bell, Settings, Bot, Shield, Newspaper } from 'lucide-react';
+import { MessageCircle, Users, Bell, Settings, Shield, Newspaper } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notifyNewMessage, notifyGeneric, ensureNotificationPermission } from '@/lib/notificationService';
 
@@ -19,7 +19,8 @@ export default function Home() {
   const { user, profile, setProfile, loading } = useCurrentUser();
   const navigate = useNavigate();
   const [selectedConv, setSelectedConv] = useState(null);
-  const [activeTab, setActiveTab] = useState('chats');
+  const [activeTab, setActiveTab] = useState('feed');
+  const [vibaiOpen, setVibaiOpen] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [showConvInfo, setShowConvInfo] = useState(false);
@@ -160,13 +161,12 @@ export default function Home() {
   }
 
   const navItems = [
+    { key: 'feed', icon: Newspaper, label: 'Bảng tin', iconOnly: true },
     { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
-    { key: 'feed', icon: Newspaper, label: 'Bảng tin' },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
-    { key: 'bot', icon: Bot, label: 'AI Bot' },
     { key: 'notifications', icon: Bell, label: 'Thông báo', badge: unreadNotifs },
     { key: 'profile', icon: Settings, label: 'Cài đặt' },
- ...(profile?.is_admin? [{ key: 'admin', icon: Shield, label: 'Quản trị' }] : []),
+    ...(profile?.is_admin ? [{ key: 'admin', icon: Shield, label: 'Quản trị' }] : []),
   ];
 
   const renderSidebar = () => {
@@ -175,8 +175,6 @@ export default function Home() {
         return <SocialFeed />;
       case 'friends':
         return <FriendsPanel currentUserId={user.id} profile={profile} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} onStartChat={startChatWith} />;
-      case 'bot':
-        return <AIBotChat currentUserId={user.id} profile={profile} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} />;
       case 'notifications':
         return <NotificationsPanel currentUserId={user.id} onClose={() => { setActiveTab('chats'); setMobileView('list'); }} />;
       case 'profile':
@@ -186,10 +184,16 @@ export default function Home() {
           <ConversationList
             currentUserId={user.id}
             profile={profile}
-            selectedId={selectedConv?.id}
-            onSelect={selectConversation}
+            selectedId={vibaiOpen ? 'vibai' : selectedConv?.id}
+            onSelect={(c) => { setVibaiOpen(false); selectConversation(c); }}
             onNewChat={() => setShowNewChat(true)}
             onNewGroup={() => setShowNewGroup(true)}
+            onOpenVibai={() => {
+              setVibaiOpen(true);
+              setSelectedConv(null);
+              setMobileView('chat');
+              setActiveTab('chats');
+            }}
           />
         );
     }
@@ -202,7 +206,7 @@ export default function Home() {
           <div className="flex-1 overflow-hidden">
             {renderSidebar()}
           </div>
-          <div className="flex items-center justify-around border-t dark:border-gray-700 bg-white dark:bg-gray-900 py-1 px-2">
+          <div className="flex items-center justify-between border-t dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.key;
@@ -215,15 +219,21 @@ export default function Home() {
                     if (item.key === 'chats') setUnreadChats(0);
                     if (item.key !== 'chats') setMobileView('list');
                   }}
-                  className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
-                    isActive? 'text-blue-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                  className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 mx-0.5 py-1.5 rounded-xl transition-all active:scale-95 ${
+                    isActive
+                      ? 'text-white bg-gradient-to-br from-violet-600 to-blue-600 shadow-lg shadow-violet-900/30'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
+                  title={item.label}
+                  aria-label={item.label}
                 >
-                  <Icon size={20} />
-                  <span className="text-[10px] font-medium">{item.label}</span>
+                  <Icon size={20} strokeWidth={isActive ? 2.4 : 2} />
+                  {!item.iconOnly && (
+                    <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+                  )}
                   {item.badge > 0 && (
-                    <span className="absolute -top-0.5 right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center">
-                      {item.badge > 9? '9+' : item.badge}
+                    <span className="absolute top-0.5 right-1.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+                      {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   )}
                 </button>
@@ -232,8 +242,10 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`flex-1 ${mobileView === 'list'? 'hidden md:flex' : 'flex'} flex-col`}>
-          {selectedConv? (
+        <div className={`flex-1 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-col`}>
+          {vibaiOpen ? (
+            <AIBotChat currentUserId={user.id} profile={profile} onClose={() => { setVibaiOpen(false); setMobileView('list'); }} />
+          ) : selectedConv ? (
             <ChatWindow
               conversation={selectedConv}
               currentUserId={user.id}
@@ -261,7 +273,8 @@ export default function Home() {
         <NewGroupModal
           onClose={() => setShowNewGroup(false)}
           currentUserId={user.id}
-          onCreated={selectConversation}
+          profile={profile}
+          onCreated={(c) => { setShowNewGroup(false); selectConversation(c); }}
         />
       )}
       {showConvInfo && selectedConv && (

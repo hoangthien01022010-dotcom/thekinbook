@@ -63,10 +63,12 @@ export default function NewGroupModal({ currentUserId, profile, onClose, onCreat
           user_id: uid,
           type: 'group_added',
           title: 'Được thêm vào nhóm',
-          body: `${profile?.display_name} đã thêm bạn vào nhóm "${conv.name}"`,
+          content: `${profile?.display_name || 'Ai đó'} đã thêm bạn vào nhóm "${conv.name}"`,
           related_id: conv.id,
+          from_user_id: currentUserId,
           from_user_name: profile?.display_name,
-          from_user_avatar: profile?.avatar_url
+          from_user_avatar: profile?.avatar_url,
+          is_read: false,
         });
       }
       onCreated(conv);
