@@ -7,12 +7,15 @@ import 'moment/locale/vi';
 moment.locale('vi');
 
 
-export default function ConversationList({ currentUserId, profile, selectedId, onSelect, onNewChat, onNewGroup }) {
-  const navigate = useNavigate();
+export default function ConversationList({ currentUserId, profile, selectedId, onSelect, onNewChat, onNewGroup, onOpenVibai }) {
   const [conversations, setConversations] = useState([]);
   const [profiles, setProfiles] = useState({});
   const [search, setSearch] = useState('');
+  const [hidden, setHidden] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kb_hidden_convs') || '[]'); } catch { return []; }
+  });
   const [loading, setLoading] = useState(true);
+
 
   const loadConversations = async () => {
     try {
