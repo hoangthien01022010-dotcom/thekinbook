@@ -181,6 +181,8 @@ export default function SocialFeed() {
           );
         })
       )}
+      </div>
     </div>
   );
 }
+
