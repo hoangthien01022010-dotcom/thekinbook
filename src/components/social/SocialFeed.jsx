@@ -103,7 +103,8 @@ export default function SocialFeed() {
   const overLimit = remaining < 0;
 
   return (
-    <div className="max-w-xl mx-auto min-h-screen border-x border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
+    <div className="h-full overflow-y-auto overscroll-contain bg-white dark:bg-black">
+      <div className="max-w-xl mx-auto border-x border-gray-200 dark:border-gray-800">
       <div className="sticky top-0 z-10 backdrop-blur bg-white/80 dark:bg-black/80 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
         <h1 className="font-bold text-xl dark:text-white">Bảng tin</h1>
       </div>
