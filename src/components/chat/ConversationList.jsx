@@ -64,10 +64,20 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
     };
   };
 
+  const hideConv = (id, e) => {
+    e?.stopPropagation();
+    setHidden(prev => {
+      const next = prev.includes(id) ? prev : [...prev, id];
+      try { localStorage.setItem('kb_hidden_convs', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const filtered = conversations.filter(c => {
-    if (!search) return true;
     const display = getConvDisplay(c);
-    return display.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || display.name.toLowerCase().includes(search.toLowerCase());
+    if (hidden.includes(c.id) && !search) return false;
+    return matchesSearch;
   });
 
   return (
@@ -76,36 +86,20 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
       <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-bold dark:text-white">Đoạn chat</h1>
-          <div className="flex gap-1">
-            <button 
-              onClick={() => navigate('/call-room')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              title="Tham gia phòng gọi"
-            >
-              <Phone size={20} className="dark:text-gray-300" />
-            </button>
-            <button 
-              onClick={onNewChat}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              title="Tin nhắn mới"
-            >
-              <MessageCircle size={20} className="dark:text-gray-300" />
-            </button>
-            <button 
-              onClick={onNewGroup}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              title="Tạo nhóm"
-            >
-              <Users size={20} className="dark:text-gray-300" />
-            </button>
-          </div>
+          <button
+            onClick={onNewGroup}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            title="Tạo nhóm trò chuyện"
+          >
+            <Users size={20} className="dark:text-gray-300" />
+          </button>
         </div>
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Tìm kiếm trên Messenger"
+            placeholder="Tìm kiếm đoạn chat"
             className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -113,6 +107,24 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">
+        {/* ViBai always pinned first */}
+        <button
+          onClick={() => onOpenVibai && onOpenVibai()}
+          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800/60"
+        >
+          <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-blue-500 flex items-center justify-center shrink-0 shadow-md">
+            <Sparkles size={22} className="text-white" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-white dark:border-gray-900" />
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-sm truncate dark:text-white">ViBai</span>
+              <span className="text-[10px] uppercase tracking-wider text-violet-500 font-bold">AI</span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">Trợ lý AI luôn sẵn sàng tâm sự</p>
+          </div>
+        </button>
+
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -127,34 +139,45 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
             const display = getConvDisplay(conv);
             const isActive = selectedId === conv.id;
             return (
-              <button
+              <div
                 key={conv.id}
-                onClick={() => onSelect(conv)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${isActive ? 'bg-blue-50 dark:bg-gray-800' : ''}`}
+                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${isActive ? 'bg-blue-50 dark:bg-gray-800' : ''}`}
               >
-                <Avatar 
-                  src={display.avatar} 
-                  name={display.name} 
-                  size={48} 
-                  isOnline={conv.type === 'direct' ? display.isOnline : undefined}
-                />
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm truncate dark:text-white">{display.name}</span>
-                    {conv.last_message_time && (
-                      <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        {moment(conv.last_message_time).utcOffset(420).fromNow()}
-                      </span>
+                <button
+                  onClick={() => onSelect(conv)}
+                  className="flex-1 flex items-center gap-3 min-w-0 text-left"
+                >
+                  <Avatar
+                    src={display.avatar}
+                    name={display.name}
+                    size={48}
+                    isOnline={conv.type === 'direct' ? display.isOnline : undefined}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm truncate dark:text-white">{display.name}</span>
+                      {conv.last_message_time && (
+                        <span className="text-xs text-gray-400 shrink-0 ml-2">
+                          {moment(conv.last_message_time).utcOffset(420).fromNow()}
+                        </span>
+                      )}
+                    </div>
+                    {conv.last_message && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                        {conv.last_message_sender === currentUserId ? 'Bạn: ' : ''}
+                        {conv.last_message}
+                      </p>
                     )}
                   </div>
-                  {conv.last_message && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                      {conv.last_message_sender === currentUserId ? 'Bạn: ' : ''}
-                      {conv.last_message}
-                    </p>
-                  )}
-                </div>
-              </button>
+                </button>
+                <button
+                  onClick={(e) => hideConv(conv.id, e)}
+                  title="Ẩn đoạn chat (tìm tên để mở lại)"
+                  className="opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 p-1.5 mr-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                >
+                  ✕
+                </button>
+              </div>
             );
           })
         )}
@@ -162,3 +185,4 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
     </div>
   );
 }
+
