@@ -86,13 +86,28 @@ export default function SocialFeed() {
     const newLikedBy = liked
       ? (p.liked_by || []).filter(id => id !== currentUserId)
       : [...(p.liked_by || []), currentUserId];
-    // Optimistic
     setPosts(prev => prev.map(x => x.id === p.id ? { ...x, liked_by: newLikedBy, likes_count: newLikedBy.length } : x));
     try {
       await base44.entities.Post.update(p.id, {
         liked_by: newLikedBy,
         likes_count: newLikedBy.length,
       });
+      // Notify post author when newly liked (not on unlike, not self-like)
+      if (!liked && p.author_id && p.author_id !== currentUserId) {
+        try {
+          await base44.entities.Notification.create({
+            user_id: p.author_id,
+            type: 'post_like',
+            title: `${profile?.display_name || 'Ai đó'} đã thích bài viết của bạn`,
+            content: (p.content || '').slice(0, 80),
+            related_id: p.id,
+            from_user_id: currentUserId,
+            from_user_name: profile?.display_name,
+            from_user_avatar: profile?.avatar_url,
+            is_read: false,
+          });
+        } catch (_) {}
+      }
     } catch (e) {
       console.error(e);
       loadPosts();
