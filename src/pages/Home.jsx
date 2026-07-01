@@ -161,7 +161,7 @@ export default function Home() {
   }
 
   const navItems = [
-    { key: 'feed', icon: Newspaper, label: 'Bảng tin', iconOnly: true },
+    { key: 'feed', icon: UsersRound, label: 'Cộng đồng', iconOnly: true },
     { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
     { key: 'notifications', icon: Bell, label: 'Thông báo', badge: unreadNotifs },
