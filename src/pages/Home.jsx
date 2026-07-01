@@ -215,6 +215,7 @@ export default function Home() {
                   key={item.key}
                   onClick={() => {
                     if (item.key === 'admin') { navigate('/admin'); return; }
+                    if (item.key === 'profile') { navigate('/settings'); return; }
                     setActiveTab(item.key);
                     if (item.key === 'chats') setUnreadChats(0);
                     if (item.key !== 'chats') setMobileView('list');
