@@ -11,7 +11,7 @@ import NewChatModal from '@/components/chat/NewChatModal';
 import NewGroupModal from '@/components/chat/NewGroupModal';
 import ConversationInfo from '@/components/chat/ConversationInfo';
 import SocialFeed from '@/components/social/SocialFeed';
-import { MessageCircle, Users, Bell, Settings, Shield, Newspaper } from 'lucide-react';
+import { MessageCircle, Users, Bell, Settings, Shield, UsersRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notifyNewMessage, notifyGeneric, ensureNotificationPermission } from '@/lib/notificationService';
 
@@ -161,7 +161,7 @@ export default function Home() {
   }
 
   const navItems = [
-    { key: 'feed', icon: Newspaper, label: 'Bảng tin', iconOnly: true },
+    { key: 'feed', icon: UsersRound, label: 'Cộng đồng', iconOnly: true },
     { key: 'chats', icon: MessageCircle, label: 'Chat', badge: unreadChats },
     { key: 'friends', icon: Users, label: 'Bạn bè' },
     { key: 'notifications', icon: Bell, label: 'Thông báo', badge: unreadNotifs },
@@ -215,6 +215,7 @@ export default function Home() {
                   key={item.key}
                   onClick={() => {
                     if (item.key === 'admin') { navigate('/admin'); return; }
+                    if (item.key === 'profile') { navigate('/settings'); return; }
                     setActiveTab(item.key);
                     if (item.key === 'chats') setUnreadChats(0);
                     if (item.key !== 'chats') setMobileView('list');

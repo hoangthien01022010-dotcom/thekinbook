@@ -337,18 +337,16 @@ export type Database = {
         }
         Relationships: []
       }
-      posts: {
+      post_comments: {
         Row: {
           author_avatar: string | null
           author_id: string
           author_name: string | null
           content: string
           created_at: string
-          created_date: string
           id: string
-          image_url: string | null
-          liked_by: string[] | null
-          likes_count: number
+          parent_id: string | null
+          post_id: string
         }
         Insert: {
           author_avatar?: string | null
@@ -356,11 +354,9 @@ export type Database = {
           author_name?: string | null
           content: string
           created_at?: string
-          created_date?: string
           id?: string
-          image_url?: string | null
-          liked_by?: string[] | null
-          likes_count?: number
+          parent_id?: string | null
+          post_id: string
         }
         Update: {
           author_avatar?: string | null
@@ -368,11 +364,69 @@ export type Database = {
           author_name?: string | null
           content?: string
           created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_avatar: string | null
+          author_id: string
+          author_name: string | null
+          comment_count: number | null
+          content: string
+          created_at: string
+          created_date: string
+          id: string
+          image_url: string | null
+          liked_by: string[] | null
+          likes_count: number
+          video_url: string | null
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_id: string
+          author_name?: string | null
+          comment_count?: number | null
+          content: string
+          created_at?: string
           created_date?: string
           id?: string
           image_url?: string | null
           liked_by?: string[] | null
           likes_count?: number
+          video_url?: string | null
+        }
+        Update: {
+          author_avatar?: string | null
+          author_id?: string
+          author_name?: string | null
+          comment_count?: number | null
+          content?: string
+          created_at?: string
+          created_date?: string
+          id?: string
+          image_url?: string | null
+          liked_by?: string[] | null
+          likes_count?: number
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -420,60 +474,87 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          allow_stranger_msg: boolean | null
           avatar_url: string | null
           ban_type: string | null
           ban_until: string | null
           bio: string | null
+          birthday: string | null
           chat_disabled: boolean | null
+          cover_url: string | null
           created_at: string
           created_date: string
           display_name: string | null
           email: string | null
+          gender: string | null
+          hide_birthday: boolean | null
+          hide_email: boolean | null
           id: string
           is_banned: boolean | null
           is_online: boolean | null
           last_active: string | null
+          location: string | null
+          phone: string | null
           status: string | null
           updated_at: string
           user_id: string
+          username: string | null
           warnings: number | null
         }
         Insert: {
+          allow_stranger_msg?: boolean | null
           avatar_url?: string | null
           ban_type?: string | null
           ban_until?: string | null
           bio?: string | null
+          birthday?: string | null
           chat_disabled?: boolean | null
+          cover_url?: string | null
           created_at?: string
           created_date?: string
           display_name?: string | null
           email?: string | null
+          gender?: string | null
+          hide_birthday?: boolean | null
+          hide_email?: boolean | null
           id?: string
           is_banned?: boolean | null
           is_online?: boolean | null
           last_active?: string | null
+          location?: string | null
+          phone?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
           warnings?: number | null
         }
         Update: {
+          allow_stranger_msg?: boolean | null
           avatar_url?: string | null
           ban_type?: string | null
           ban_until?: string | null
           bio?: string | null
+          birthday?: string | null
           chat_disabled?: boolean | null
+          cover_url?: string | null
           created_at?: string
           created_date?: string
           display_name?: string | null
           email?: string | null
+          gender?: string | null
+          hide_birthday?: boolean | null
+          hide_email?: boolean | null
           id?: string
           is_banned?: boolean | null
           is_online?: boolean | null
           last_active?: string | null
+          location?: string | null
+          phone?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
           warnings?: number | null
         }
         Relationships: []
