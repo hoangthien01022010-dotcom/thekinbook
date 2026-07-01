@@ -21,6 +21,7 @@ function CommentThread({ postId, currentUserId, profile, onCountChange }) {
   const [replyTo, setReplyTo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const listRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -49,48 +50,95 @@ function CommentThread({ postId, currentUserId, profile, onCountChange }) {
     finally { setBusy(false); }
   };
 
-  const roots = comments.filter(c => !c.parent_id);
+  const roots = comments.filter(c =>!c.parent_id);
   const childrenOf = (id) => comments.filter(c => c.parent_id === id);
 
   return (
-    <div className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3">
-      {!loaded ? <div className="py-2"><Loader2 size={14} className="animate-spin text-gray-400"/></div> : (
-        <div className="space-y-2.5">
-          {roots.map(c => (
-            <div key={c.id}>
-              <CommentRow c={c} onReply={() => setReplyTo(c)}/>
-              <div className="ml-9 mt-2 space-y-2">
-                {childrenOf(c.id).map(ch => <CommentRow key={ch.id} c={ch} small/>)}
-              </div>
+    <div className="mt-3 rounded-2xl bg-[#f9f6f1] dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+      <div ref={listRef} className="max-h-80 overflow-y-auto px-3 py-3 space-y-3"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.035) 1px, transparent 0)`,
+          backgroundSize: '18px 18px',
+        }}>
+        {!loaded? (
+          <div className="py-2 flex justify-center"><Loader2 size={16} className="animate-spin text-zinc-400"/></div>
+        ) : roots.length === 0? (
+          <div className="text-xs text-zinc-500 text-center py-1">Chưa có bình luận</div>
+        ) : roots.map(c => (
+          <div key={c.id}>
+            <CommentRow c={c} onReply={() => setReplyTo(c)} currentUserId={currentUserId}/>
+            <div className="mt-2 ml-6 space-y-2 border-l-2 border-zinc-200 dark:border-zinc-800 pl-3">
+              {childrenOf(c.id).map(ch => (
+                <CommentRow key={ch.id} c={ch} small currentUserId={currentUserId}/>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-3 flex items-center gap-2">
-        <Avatar src={profile?.avatar_url} name={profile?.display_name} size={30}/>
-        <div className="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3">
-          {replyTo && <span className="text-xs text-violet-600 mr-2 shrink-0 flex items-center gap-1">Trả lời {replyTo.author_name} <button onClick={() => setReplyTo(null)}><X size={12}/></button></span>}
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} placeholder="Viết bình luận…" className="flex-1 bg-transparent py-2 outline-none text-sm dark:text-white"/>
-          <button onClick={send} disabled={!text.trim() || busy} className="text-violet-600 disabled:opacity-40 p-1"><Send size={16}/></button>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-2">
+        {replyTo && (
+          <div className="text-[11px] text-violet-600 px-2 pb-1 flex items-center gap-1">
+            Trả lời {replyTo.author_name}
+            <button onClick={() => setReplyTo(null)} className="p-0.5 hover:opacity-70"><X size={12}/></button>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <Avatar src={profile?.avatar_url} name={profile?.display_name} size={30}/>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' &&!e.shiftKey && (e.preventDefault(), send())}
+            placeholder="Viết bình luận…"
+            className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-full px-4 py-2 outline-none text-sm dark:text-white"
+          />
+          <button
+            onClick={send}
+            disabled={!text.trim() || busy}
+            className="p-2.5 rounded-xl bg-violet-500 text-white disabled:opacity-40 active:scale-95 transition shadow-sm shrink-0"
+            aria-label="Gửi"
+          >
+            <Send size={16}/>
+          </button>
         </div>
       </div>
     </div>
   );
 }
-function CommentRow({ c, onReply, small }) {
+
+function CommentRow({ c, onReply, small, currentUserId }) {
+  const isMine = c.author_id === currentUserId;
   return (
-    <div className="flex gap-2">
-      <Link to={`/profile/${c.author_id}`}><Avatar src={c.author_avatar} name={c.author_name} size={small ? 26 : 32}/></Link>
-      <div className="flex-1 min-w-0">
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-3 py-1.5 inline-block max-w-full">
-          <Link to={`/profile/${c.author_id}`} className="text-xs font-semibold dark:text-white hover:underline">{c.author_name}</Link>
-          <p className="text-sm dark:text-gray-100 whitespace-pre-wrap break-words">{c.content}</p>
-        </div>
-        <div className="flex items-center gap-3 text-[11px] text-gray-500 mt-0.5 ml-2">
+    <div className={`flex gap-2 ${isMine? 'justify-start' : 'justify-end'}`}>
+      {isMine && (
+        <Link to={`/profile/${c.author_id}`} className="shrink-0 mt-0.5">
+          <Avatar src={c.author_avatar} name={c.author_name} size={small? 26 : 30}/>
+        </Link>
+      )}
+      <div className={`max-w-[82%] rounded-2xl px-3 py-2 shadow-sm
+        ${isMine
+         ? 'bg-white border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800'
+          : 'bg-[#f1eaff] dark:bg-violet-900/30'
+        }`}>
+        {!isMine && (
+          <Link to={`/profile/${c.author_id}`} className="text-xs font-semibold hover:underline dark:text-white">
+            {c.author_name}
+          </Link>
+        )}
+        {isMine && (
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{c.author_name}</div>
+        )}
+        <p className="text-sm dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed">{c.content}</p>
+        <div className="flex items-center gap-3 text-[11px] text-zinc-500 mt-1">
           <span>{timeAgo(c.created_at)}</span>
           {onReply && <button onClick={onReply} className="font-semibold hover:text-violet-600">Trả lời</button>}
         </div>
       </div>
+      {!isMine && (
+        <Link to={`/profile/${c.author_id}`} className="shrink-0 mt-0.5">
+          <Avatar src={c.author_avatar} name={c.author_name} size={small? 26 : 30}/>
+        </Link>
+      )}
     </div>
   );
 }
@@ -136,18 +184,18 @@ export default function SocialFeed() {
       loadInitial();
     })();
     const unsub = base44.entities.Post.subscribe((evt) => {
-      if (evt.type === 'INSERT' && evt.data) setPosts(prev => [evt.data, ...prev.filter(p => p.id !== evt.data.id)]);
+      if (evt.type === 'INSERT' && evt.data) setPosts(prev => [evt.data,...prev.filter(p => p.id!== evt.data.id)]);
     });
     return () => unsub();
   }, [loadInitial]);
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loading) return;
+    if (!sentinelRef.current ||!hasMore || loading) return;
     const io = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting) {
         const next = page + 1;
         const { rows, done } = await fetchPage(next);
-        setPosts(p => [...p, ...rows.filter(r => !p.some(x => x.id === r.id))]);
+        setPosts(p => [...p,...rows.filter(r =>!p.some(x => x.id === r.id))]);
         setPage(next); setHasMore(!done);
       }
     }, { rootMargin: '400px' });
@@ -171,7 +219,7 @@ export default function SocialFeed() {
 
   const createPost = async () => {
     const text = content.trim();
-    if ((!text && !imageFile) || posting) return;
+    if ((!text &&!imageFile) || posting) return;
     setPosting(true);
     try {
       let image_url = null;
@@ -195,11 +243,11 @@ export default function SocialFeed() {
   const toggleLike = async (p) => {
     if (!currentUserId) return;
     const liked = (p.liked_by || []).includes(currentUserId);
-    const newLikedBy = liked ? (p.liked_by || []).filter(id => id !== currentUserId) : [...(p.liked_by || []), currentUserId];
-    setPosts(prev => prev.map(x => x.id === p.id ? { ...x, liked_by: newLikedBy, likes_count: newLikedBy.length } : x));
+    const newLikedBy = liked? (p.liked_by || []).filter(id => id!== currentUserId) : [...(p.liked_by || []), currentUserId];
+    setPosts(prev => prev.map(x => x.id === p.id? {...x, liked_by: newLikedBy, likes_count: newLikedBy.length } : x));
     try {
       await base44.entities.Post.update(p.id, { liked_by: newLikedBy, likes_count: newLikedBy.length });
-      if (!liked && p.author_id && p.author_id !== currentUserId) {
+      if (!liked && p.author_id && p.author_id!== currentUserId) {
         try {
           await base44.entities.Notification.create({
             user_id: p.author_id, type: 'post_like',
@@ -254,10 +302,10 @@ export default function SocialFeed() {
                   <ImageIcon size={18}/>
                 </button>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm ${overLimit ? 'text-red-500' : 'text-gray-500'}`}>{remaining}</span>
-                  <button onClick={createPost} disabled={(!content.trim() && !imageFile) || overLimit || posting}
+                  <span className={`text-sm ${overLimit? 'text-red-500' : 'text-gray-500'}`}>{remaining}</span>
+                  <button onClick={createPost} disabled={(!content.trim() &&!imageFile) || overLimit || posting}
                     className="px-5 py-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold text-sm disabled:opacity-50">
-                    {posting ? '…' : 'Đăng'}
+                    {posting? '…' : 'Đăng'}
                   </button>
                 </div>
               </div>
@@ -266,9 +314,9 @@ export default function SocialFeed() {
         </div>
 
         {/* Posts */}
-        {loading ? (
+        {loading? (
           <div className="flex justify-center py-10"><Loader2 className="animate-spin text-violet-500"/></div>
-        ) : posts.length === 0 ? (
+        ) : posts.length === 0? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">Chưa có bài viết nào.</div>
         ) : posts.map(p => {
           const liked = (p.liked_by || []).includes(currentUserId);
@@ -289,11 +337,11 @@ export default function SocialFeed() {
               {p.video_url && <video src={p.video_url} controls className="mt-3 rounded-xl w-full max-h-[600px]"/>}
 
               <div className="flex items-center justify-around mt-3 pt-2 border-t border-gray-100 dark:border-gray-800 text-gray-500">
-                <button onClick={() => toggleLike(p)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${liked ? 'text-pink-500' : ''}`}>
-                  <Heart size={18} fill={liked ? 'currentColor' : 'none'}/>
+                <button onClick={() => toggleLike(p)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${liked? 'text-pink-500' : ''}`}>
+                  <Heart size={18} fill={liked? 'currentColor' : 'none'}/>
                   <span className="text-sm font-medium">{p.likes_count || 0}</span>
                 </button>
-                <button onClick={() => setOpenComments(o => ({ ...o, [p.id]: !o[p.id] }))} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+                <button onClick={() => setOpenComments(o => ({...o, [p.id]:!o[p.id] }))} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
                   <MessageCircle size={18}/>
                   <span className="text-sm font-medium">{p.comment_count || 0}</span>
                 </button>
@@ -305,17 +353,17 @@ export default function SocialFeed() {
 
               {showC && (
                 <CommentThread postId={p.id} currentUserId={currentUserId} profile={profile}
-                  onCountChange={(delta) => setPosts(prev => prev.map(x => x.id === p.id ? { ...x, comment_count: (x.comment_count || 0) + delta } : x))}/>
+                  onCountChange={(delta) => setPosts(prev => prev.map(x => x.id === p.id? {...x, comment_count: (x.comment_count || 0) + delta } : x))}/>
               )}
             </article>
           );
         })}
 
         <div ref={sentinelRef} className="h-14 flex justify-center items-center">
-          {hasMore && !loading && <Loader2 className="animate-spin text-gray-400" size={18}/>}
+          {hasMore &&!loading && <Loader2 className="animate-spin text-gray-400" size={18}/>}
           {!hasMore && posts.length > 0 && <span className="text-xs text-gray-400">Đã hết bài viết</span>}
         </div>
       </div>
     </div>
   );
-}
+                                }
