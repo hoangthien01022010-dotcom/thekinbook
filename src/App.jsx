@@ -20,6 +20,8 @@ import CallRoom from '@/pages/CallRoom';
 import CodeExplorer from '@/pages/CodeExplorer';
 import AIAgent from '@/pages/AIAgent';
 import Backup from '@/pages/Backup';
+import Settings from '@/pages/Settings';
+import Profile from '@/pages/Profile';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
