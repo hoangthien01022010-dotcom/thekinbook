@@ -160,7 +160,7 @@ export default function Settings() {
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-gray-950 pb-24">
       <header className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-3xl mx-auto flex items-center gap-3 px-4 h-14">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button onClick={() => navigate('/')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" title="Về trang chính">
             <ArrowLeft size={20} className="dark:text-gray-200"/>
           </button>
           <h1 className="text-lg font-bold dark:text-white">Cài đặt</h1>
