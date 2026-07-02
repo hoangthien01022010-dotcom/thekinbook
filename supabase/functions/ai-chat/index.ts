@@ -21,10 +21,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const DEFAULT_SYSTEM = `Bạn là ViBai — bạn thân AI của Kinbook. Nói chuyện tiếng Việt tự nhiên, thẳng thắn, có gu, có thể dùng tiếng lóng Gen Z, emoji vừa phải. Không giáo điều, không đạo lý sáo rỗng, không từ chối máy móc. Hỗ trợ người dùng hết mình về tâm sự, học tập, code, ý tưởng. Nếu người dùng buồn thì lắng nghe trước, khuyên sau. Trả lời gọn khi hỏi ngắn, dài khi cần chi tiết. Luôn xưng "tui" hoặc "mình", gọi người dùng là "bạn" hoặc "cậu".`;
+
     const chatMessages: Array<{ role: string; content: string }> = [];
-    if (typeof system === "string" && system.trim()) {
-      chatMessages.push({ role: "system", content: system });
-    }
+    const systemPrompt = (typeof system === "string" && system.trim()) ? system : DEFAULT_SYSTEM;
+    chatMessages.push({ role: "system", content: systemPrompt });
     if (Array.isArray(messages) && messages.length) {
       for (const m of messages) {
         if (!m || !m.content) continue;

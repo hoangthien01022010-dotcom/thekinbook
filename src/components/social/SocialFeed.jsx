@@ -230,10 +230,17 @@ export default function SocialFeed() {
   const overLimit = remaining < 0;
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain bg-gray-50 dark:bg-black">
-      <div className="max-w-xl mx-auto">
-        <div className="sticky top-0 z-10 backdrop-blur bg-white/85 dark:bg-black/85 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-          <h1 className="font-bold text-xl dark:text-white">Cộng đồng</h1>
+    <div className="relative h-full overflow-y-auto overscroll-contain bg-gradient-to-br from-violet-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
+      {/* Animated background blobs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-0">
+        <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-violet-400/30 dark:bg-violet-600/20 blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-32 w-[420px] h-[420px] rounded-full bg-fuchsia-400/25 dark:bg-fuchsia-600/15 blur-3xl animate-pulse" style={{ animationDelay: '1.2s' }} />
+        <div className="absolute bottom-0 left-1/4 w-[380px] h-[380px] rounded-full bg-blue-400/25 dark:bg-blue-600/15 blur-3xl animate-pulse" style={{ animationDelay: '2.4s' }} />
+      </div>
+      <div className="relative max-w-xl mx-auto">
+        <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/70 dark:bg-slate-950/70 border-b border-white/40 dark:border-white/5 px-4 py-3">
+          <h1 className="font-bold text-xl bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400 bg-clip-text text-transparent">Sảnh cộng đồng</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Nơi mọi người chia sẻ mỗi ngày</p>
         </div>
 
         {/* Composer */}
