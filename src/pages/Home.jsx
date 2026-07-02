@@ -199,10 +199,12 @@ export default function Home() {
     }
   };
 
+  const isChat = activeTab === 'chats';
+
   return (
     <div className="fixed inset-0 flex flex-col bg-white dark:bg-gray-900">
       <div className="flex flex-1 overflow-hidden">
-        <div className={`w-full md:w-[360px] md:border-r dark:border-gray-700 flex flex-col ${mobileView === 'chat'? 'hidden md:flex' : 'flex'}`}>
+        <div className={`${isChat ? 'w-full md:w-[360px] md:border-r dark:border-gray-700' : 'w-full'} flex flex-col ${isChat && mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}>
           <div className="flex-1 overflow-hidden">
             {renderSidebar()}
           </div>
@@ -243,24 +245,26 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`flex-1 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-col`}>
-          {vibaiOpen ? (
-            <AIBotChat currentUserId={user.id} profile={profile} onClose={() => { setVibaiOpen(false); setMobileView('list'); }} />
-          ) : selectedConv ? (
-            <ChatWindow
-              conversation={selectedConv}
-              currentUserId={user.id}
-              profile={profile}
-              profiles={profiles}
-              onBack={() => setMobileView('list')}
-              onShowInfo={() => setShowConvInfo(true)}
-            />
-          ) : (
-            <div className="flex-1 hidden md:flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Chọn một cuộc trò chuyện để bắt đầu
-            </div>
-          )}
-        </div>
+        {isChat && (
+          <div className={`flex-1 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-col`}>
+            {vibaiOpen ? (
+              <AIBotChat currentUserId={user.id} profile={profile} onClose={() => { setVibaiOpen(false); setMobileView('list'); }} />
+            ) : selectedConv ? (
+              <ChatWindow
+                conversation={selectedConv}
+                currentUserId={user.id}
+                profile={profile}
+                profiles={profiles}
+                onBack={() => setMobileView('list')}
+                onShowInfo={() => setShowConvInfo(true)}
+              />
+            ) : (
+              <div className="flex-1 hidden md:flex items-center justify-center text-gray-500 dark:text-gray-400">
+                Chọn một cuộc trò chuyện để bắt đầu
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {showNewChat && (
