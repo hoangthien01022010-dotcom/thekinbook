@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient";
+import { authService } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
-import GoogleIcon from "@/components/GoogleIcon";
+import { Mail, Lock, Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,31 +14,52 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Validation
+    if (!email.trim()) {
+      setError("Vui lòng nhập email");
+      return;
+    }
+    if (!validateEmail(email)) {
+      setError("Email không hợp lệ");
+      return;
+    }
+    if (!password.trim()) {
+      setError("Vui lòng nhập mật khẩu");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) throw err;
-      navigate("/", { replace: true });
+      const { data, error: err } = await authService.login(email, password);
+
+      if (err) {
+        console.error("[Login Error]", err);
+        setError(err.message || "Đăng nhập thất bại");
+        return;
+      }
+
+      if (data) {
+        console.log("[Login Success]", data.email);
+        navigate("/", { replace: true });
+      }
     } catch (err) {
-      setError(err?.message || "Email hoặc mật khẩu không đúng");
+      console.error("[Login Exception]", err);
+      setError("Có lỗi xảy ra. Vui lòng thử lại");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setError("");
-    try {
-      const { error: err } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/` },
-      });
-      if (err) throw err;
-    } catch (err) {
-      setError(err?.message || "Không thể đăng nhập với Google");
     }
   };
 
@@ -70,38 +90,31 @@ export default function Login() {
             <p className="mt-1.5 text-sm text-white/50">Chào mừng trở lại</p>
           </div>
 
-          {/* Google */}
-          <button
-            onClick={handleGoogle}
-            className="w-full h-12 rounded-xl bg-white hover:bg-white/95 text-slate-900 font-medium flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] shadow-lg"
-          >
-            <GoogleIcon className="w-5 h-5" />
-            Tiếp tục với Google
-          </button>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div>
-            <div className="relative flex justify-center">
-              <span className="bg-slate-950/60 backdrop-blur px-3 text-xs uppercase tracking-wider text-white/40">hoặc dùng email</span>
-            </div>
-          </div>
-
+          {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-              {error}
+            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
+          {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-xs uppercase tracking-wider text-white/60">Email</Label>
               <div className="relative mt-1.5">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
-                  id="email" type="email" autoComplete="email" autoFocus required
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  autoFocus
+                  required
+                  disabled={loading}
                   placeholder="you@example.com"
-                  value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-violet-500 focus-visible:border-violet-500/50"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-violet-500 focus-visible:border-violet-500/50 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -114,14 +127,21 @@ export default function Login() {
               <div className="relative mt-1.5">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
-                  id="password" type={showPw ? "text" : "password"} autoComplete="current-password" required
+                  id="password"
+                  type={showPw ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  disabled={loading}
                   placeholder="••••••••"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 pr-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-violet-500 focus-visible:border-violet-500/50"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-11 pr-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-violet-500 focus-visible:border-violet-500/50 disabled:opacity-50"
                 />
                 <button
-                  type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80"
+                  type="button"
+                  onClick={() => setShowPw(v => !v)}
+                  disabled={loading}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 disabled:opacity-50"
                   tabIndex={-1}
                 >
                   {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -130,13 +150,22 @@ export default function Login() {
             </div>
 
             <Button
-              type="submit" disabled={loading}
-              className="w-full h-12 rounded-xl font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-lg shadow-violet-900/40 transition-all active:scale-[0.99] disabled:opacity-60"
+              type="submit"
+              disabled={loading || !email.trim() || !password.trim()}
+              className="w-full h-12 rounded-xl font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-lg shadow-violet-900/40 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Đang đăng nhập...</>) : "Đăng nhập"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang đăng nhập...
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </Button>
           </form>
 
+          {/* Footer */}
           <p className="mt-6 text-center text-sm text-white/50">
             Chưa có tài khoản?{" "}
             <Link to="/register" className="text-white font-medium hover:text-violet-300">Đăng ký</Link>
