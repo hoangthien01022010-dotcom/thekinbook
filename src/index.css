@@ -189,8 +189,13 @@
       opacity: 1;
       max-width: 100px;
       transform: translateX(0);
-    }
-  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
   .pill-item.is-active,
   .pill-item[aria-expanded="true"] {
     max-width: 160px;
