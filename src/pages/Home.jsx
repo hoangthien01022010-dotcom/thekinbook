@@ -208,40 +208,36 @@ export default function Home() {
           <div className="flex-1 overflow-hidden">
             {renderSidebar()}
           </div>
-          <div className="flex items-center justify-between border-t dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    if (item.key === 'admin') { navigate('/admin'); return; }
-                    if (item.key === 'profile') { navigate('/settings'); return; }
-                    setActiveTab(item.key);
-                    if (item.key === 'chats') setUnreadChats(0);
-                    if (item.key !== 'chats') setMobileView('list');
-                  }}
-                  className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 mx-0.5 py-1.5 rounded-xl transition-all active:scale-95 ${
-                    isActive
-                      ? 'text-white bg-gradient-to-br from-violet-600 to-blue-600 shadow-lg shadow-violet-900/30'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                  title={item.label}
-                  aria-label={item.label}
-                >
-                  <Icon size={20} strokeWidth={isActive ? 2.4 : 2} />
-                  {!item.iconOnly && (
-                    <span className="text-[10px] font-semibold leading-none">{item.label}</span>
-                  )}
-                  {item.badge > 0 && (
-                    <span className="absolute top-0.5 right-1.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <div className="flex justify-center border-t border-white/5 bg-transparent px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <div className="pill-nav max-w-full overflow-x-auto no-scrollbar">
+              {navItems.map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      if (item.key === 'admin') { navigate('/admin'); return; }
+                      if (item.key === 'profile') { navigate('/settings'); return; }
+                      setActiveTab(item.key);
+                      if (item.key === 'chats') setUnreadChats(0);
+                      if (item.key !== 'chats') setMobileView('list');
+                    }}
+                    className={`pill-item ${isActive ? 'is-active' : ''}`}
+                    title={item.label}
+                    aria-label={item.label}
+                  >
+                    <Icon size={20} strokeWidth={isActive ? 2.4 : 2} />
+                    <span className="pill-label">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-gradient-to-br from-pink-500 to-rose-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-[#0a1216]">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
