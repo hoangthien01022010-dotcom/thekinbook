@@ -22,110 +22,68 @@ export const authService = {
     return !!this.getUser();
   },
 
-  // Login with Email/Password
-  async login(email, password) {
+  // Normalize identifier (username OR email). Stored lowercase.
+  normId(id) { return String(id || '').toLowerCase().trim(); },
+
+  // Login with identifier (email or username) + password
+  async login(identifier, password) {
     try {
-      // Validate input
-      if (!email || !password) {
-        throw new Error('Email và mật khẩu không được để trống');
-      }
+      const id = this.normId(identifier);
+      if (!id || !password) throw new Error('Tên đăng nhập và mật khẩu không được để trống');
 
-      // Query user from database
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase().trim())
-        .single();
+        .from('users').select('*').eq('email', id).maybeSingle();
+      if (error || !data) throw new Error('Tài khoản không tồn tại');
+      if (data.password !== this.hashPassword(password)) throw new Error('Mật khẩu không đúng');
 
-      if (error || !data) {
-        throw new Error('Email không tồn tại');
-      }
-
-      // Check password (simple comparison - in production use bcrypt!)
-      if (data.password !== this.hashPassword(password)) {
-        throw new Error('Mật khẩu không đúng');
-      }
-
-      // Set user session
-      const user = {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        avatar: data.avatar,
-        createdAt: data.created_at,
-      };
+      const user = { id: data.id, email: data.email, name: data.name, avatar: data.avatar, createdAt: data.created_at };
       this.setUser(user);
       return { data: user, error: null };
-    } catch (error) {
-      return { data: null, error: error };
-    }
+    } catch (error) { return { data: null, error }; }
   },
 
-  // Register new user
-  async register(email, password, name) {
+  // Register — email/username optional distinction; name required
+  async register(identifier, password, name) {
     try {
-      if (!email || !password || !name) {
-        throw new Error('Vui lòng điền đầy đủ thông tin');
-      }
+      const id = this.normId(identifier);
+      if (!id || !password || !name) throw new Error('Vui lòng điền đầy đủ thông tin');
+      if (password.length < 4) throw new Error('Mật khẩu tối thiểu 4 ký tự');
 
-      if (password.length < 6) {
-        throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
-      }
-
-      // Check if user already exists
       const { data: existing } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email.toLowerCase().trim())
-        .single();
+        .from('users').select('id').eq('email', id).maybeSingle();
+      if (existing) throw new Error('Tên đăng nhập này đã tồn tại');
 
-      if (existing) {
-        throw new Error('Email này đã được đăng ký');
-      }
+      const { data, error } = await supabase.from('users').insert([{
+        email: id,
+        password: this.hashPassword(password),
+        name: name.trim(),
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+      }]).select().single();
+      if (error) throw error;
 
-      // Create new user
-      const { data, error } = await supabase
-        .from('users')
-        .insert([
-          {
-            email: email.toLowerCase().trim(),
-            password: this.hashPassword(password),
-            name: name.trim(),
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Auto login after registration
-      const user = {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        avatar: data.avatar,
-        createdAt: data.created_at,
-      };
+      const user = { id: data.id, email: data.email, name: data.name, avatar: data.avatar, createdAt: data.created_at };
       this.setUser(user);
       return { data: user, error: null };
-    } catch (error) {
-      return { data: null, error: error };
-    }
+    } catch (error) { return { data: null, error }; }
   },
 
-  // Logout
-  logout() {
-    this.setUser(null);
+  // Simple direct reset — identifier + new password
+  async resetPassword(identifier, newPassword) {
+    try {
+      const id = this.normId(identifier);
+      if (!id || !newPassword) throw new Error('Thiếu thông tin');
+      if (newPassword.length < 4) throw new Error('Mật khẩu tối thiểu 4 ký tự');
+      const { data: existing } = await supabase.from('users').select('id').eq('email', id).maybeSingle();
+      if (!existing) throw new Error('Tài khoản không tồn tại');
+      const { error } = await supabase.from('users').update({ password: this.hashPassword(newPassword) }).eq('id', existing.id);
+      if (error) throw error;
+      return { data: true, error: null };
+    } catch (error) { return { data: null, error }; }
   },
 
-  // Simple hash function (NOT for production!)
-  // In production, use bcrypt or similar
-  hashPassword(password) {
-    return btoa(password); // Base64 encode - ONLY for demo!
-  },
+  logout() { this.setUser(null); },
+
+  hashPassword(password) { return btoa(unescape(encodeURIComponent(password))); },
 
   // Update user profile
   async updateProfile(userId, updates) {
