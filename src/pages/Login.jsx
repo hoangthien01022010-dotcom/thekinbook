@@ -6,6 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Lock, Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
 
+const withTimeout = (promise, ms = 18000) => Promise.race([
+  promise,
+  new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), ms)),
+]);
+
 export default function Login() {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
@@ -22,7 +27,9 @@ export default function Login() {
     if (!password) return setError("Nhập mật khẩu");
     setLoading(true);
     try {
-      const { data, error: err } = await authService.login(identifier, password);
+      const result = await withTimeout(authService.login(identifier, password));
+      if (result?.timeout) { setError("Đăng nhập quá lâu. Kiểm tra mạng rồi thử lại."); return; }
+      const { data, error: err } = result;
       if (err) { setError(err.message || "Đăng nhập thất bại"); return; }
       if (data) navigate("/", { replace: true });
     } catch {
@@ -34,13 +41,12 @@ export default function Login() {
     setError("");
     setGoogleLoading(true);
     try {
-      const result = await Promise.race([
+      const result = await withTimeout(
         lovable.auth.signInWithOAuth("google", {
           redirect_uri: window.location.origin,
           extraParams: { prompt: "select_account" },
-        }),
-        new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), 18000)),
-      ]);
+        })
+      );
 
       if (result?.timeout) {
         setError("Google đang mở quá lâu. Thử bấm lại hoặc kiểm tra popup của trình duyệt.");

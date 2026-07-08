@@ -3,6 +3,11 @@ import { supabase } from '@/lib/supabaseClient';
 
 const AuthContext = createContext(null);
 
+const authTimeout = (promise, ms = 12000) => Promise.race([
+  promise,
+  new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), ms)),
+]);
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,12 +19,25 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authTimeout(supabase.auth.getSession()).then((result) => {
       if (!mounted) return;
+      if (result?.timeout) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoadingAuth(false);
+        setAuthChecked(true);
+        return;
+      }
+      const { data: { session } } = result;
       const u = session?.user || null;
       setUser(u ? { id: u.id, email: u.email, full_name: u.user_metadata?.full_name } : null);
       setIsAuthenticated(!!u);
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    }).catch(() => {
+      if (!mounted) return;
+      setUser(null);
+      setIsAuthenticated(false);
       setIsLoadingAuth(false);
       setAuthChecked(true);
     });
@@ -51,7 +69,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
-    const { data: { user: u } } = await supabase.auth.getUser();
+    const result = await authTimeout(supabase.auth.getUser());
+    if (result?.timeout) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      return;
+    }
+    const { data: { user: u } } = result;
     setUser(u ? { id: u.id, email: u.email, full_name: u.user_metadata?.full_name } : null);
     setIsAuthenticated(!!u);
     setAuthChecked(true);

@@ -5,6 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, User, Loader2, Eye, EyeOff, Sparkles, AlertCircle, CheckCircle, IdCard } from "lucide-react";
 
+const withTimeout = (promise, ms = 18000) => Promise.race([
+  promise,
+  new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), ms)),
+]);
+
 export default function Register() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -23,7 +28,9 @@ export default function Register() {
     if (password.length < 4) return setError("Mật khẩu tối thiểu 4 ký tự");
     setLoading(true);
     try {
-      const { data, error: err } = await authService.register(identifier, password, name);
+      const result = await withTimeout(authService.register(identifier, password, name));
+      if (result?.timeout) { setError("Đăng ký quá lâu. Kiểm tra mạng rồi thử lại."); return; }
+      const { data, error: err } = result;
       if (err) { setError(err.message || "Đăng ký thất bại"); return; }
       if (data) {
         setSuccess("Đăng ký thành công!");
