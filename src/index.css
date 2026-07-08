@@ -39,4 +39,65 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%; /* #536471 chữ xám */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%; /* viền xám nhạt */
+    --input: 214 32% 91%;
+    --ring: 213 94% 50%;
+  }
+}
+
+@layer base {
+    * { @apply border-border; }
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    overflow-x: hidden;
+  }
+  
+  /* Chỉ có hiệu ứng gradient ở dark mode */
+  :root:not(.light) body {
+    background-image:
+      radial-gradient(1000px 600px at 8% -10%, rgba(53,234,255,0.14), transparent 60%),
+      radial-gradient(900px 700px at 110% 10%, rgba(255,10,108,0.12), transparent 60%),
+      radial-gradient(1200px 800px at 50% 120%, rgba(53,234,255,0.08), transparent 70%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .glass {
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid hsl(var(--border));
+  }
+  
+  .glass-strong {
+    background: hsl(var(--card) / 0.75);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Fix switch tím -> xanh Messenger */
+  button[role="switch"][data-state="checked"] {
+    background-color: hsl(213 94% 50%) !important;
+  }
+  
+  /* Fix tab active */
+  .light [data-state="active"] {
+    color: hsl(213 94% 50%) !important;
+    border-color: hsl(213 94% 50%) !important;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    }
