@@ -1,6 +1,7 @@
 // Drop-in adapter that replaces the legacy base44 SDK with Supabase + Lovable AI.
 // Every base44.* call in the codebase resolves through here.
 import { supabase } from '@/lib/supabaseClient';
+import { lovable } from '@/integrations/lovable/index';
 
 // ---------------------------------------------------------------------------
 // Table name mapping (entity name -> Postgres table)
@@ -174,11 +175,12 @@ const auth = {
     if (error) throw error;
   },
   loginWithProvider: async (provider, redirect = '/') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin + redirect },
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: window.location.origin,
+      extraParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
     });
-    if (error) throw error;
+    if (result?.error) throw result.error;
+    if (!result?.redirected && redirect) window.location.href = redirect;
   },
   logout: async (redirect) => {
     await supabase.auth.signOut();
