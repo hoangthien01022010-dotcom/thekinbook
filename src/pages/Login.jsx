@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "@/lib/auth";
+import { lovable } from "@/integrations/lovable/index";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Lock, Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
@@ -12,6 +13,7 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +28,35 @@ export default function Login() {
     } catch {
       setError("Có lỗi xảy ra. Thử lại");
     } finally { setLoading(false); }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      const result = await Promise.race([
+        lovable.auth.signInWithOAuth("google", {
+          redirect_uri: window.location.origin,
+          extraParams: { prompt: "select_account" },
+        }),
+        new Promise((resolve) => setTimeout(() => resolve({ timeout: true }), 18000)),
+      ]);
+
+      if (result?.timeout) {
+        setError("Google đang mở quá lâu. Thử bấm lại hoặc kiểm tra popup của trình duyệt.");
+        return;
+      }
+      if (result?.error) {
+        setError(result.error.message || "Đăng nhập Google thất bại");
+        return;
+      }
+      if (result?.redirected) return;
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err?.message || "Không mở được đăng nhập Google");
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -56,7 +87,7 @@ export default function Login() {
               <Label htmlFor="id" className="text-xs uppercase tracking-wider text-white/60">Tên đăng nhập</Label>
               <div className="relative mt-1.5">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                <Input id="id" autoFocus autoComplete="username" disabled={loading}
+                <Input id="id" autoFocus autoComplete="username" disabled={loading || googleLoading}
                   placeholder="ten_dang_nhap hoặc email"
                   value={identifier} onChange={(e) => setIdentifier(e.target.value)}
                   className="pl-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30" />
@@ -71,7 +102,7 @@ export default function Login() {
               <div className="relative mt-1.5">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input id="password" type={showPw ? "text" : "password"} autoComplete="current-password"
-                  disabled={loading} placeholder="••••••••"
+                  disabled={loading || googleLoading} placeholder="••••••••"
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   className="pl-11 pr-11 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30" />
                 <button type="button" onClick={() => setShowPw(v => !v)} tabIndex={-1}
@@ -81,11 +112,27 @@ export default function Login() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading || !identifier.trim() || !password}
+            <button type="submit" disabled={loading || googleLoading || !identifier.trim() || !password}
               className="neon-btn w-full h-12 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Đăng nhập"}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3 text-white/30 text-xs">
+            <div className="h-px flex-1 bg-white/10" />
+            hoặc
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading || googleLoading}
+            className="w-full h-12 rounded-full bg-white/8 border border-white/12 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/12 active:scale-[0.98] transition disabled:opacity-60"
+          >
+            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="grid place-items-center w-5 h-5 rounded-full bg-white text-[#111] text-sm font-black">G</span>}
+            Đăng nhập bằng Google
+          </button>
 
           <p className="mt-6 text-center text-sm text-white/50">
             Chưa có tài khoản?{" "}
