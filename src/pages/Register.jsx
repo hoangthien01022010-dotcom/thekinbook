@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "@/lib/auth";
+import { logSecurityEvent } from "@/lib/securityLog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, User, Loader2, Eye, EyeOff, Sparkles, AlertCircle, CheckCircle, IdCard } from "lucide-react";
@@ -15,6 +16,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot - người thật không thấy field này
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -26,6 +28,14 @@ export default function Register() {
     if (!name.trim()) return setError("Nhập tên hiển thị");
     if (!identifier.trim()) return setError("Nhập tên đăng nhập");
     if (password.length < 4) return setError("Mật khẩu tối thiểu 4 ký tự");
+
+    if (website.trim()) {
+      logSecurityEvent("bot_signup_blocked", { identifier: identifier.trim().toLowerCase(), detail: "honeypot field filled" });
+      setSuccess("Đăng ký thành công!");
+      setTimeout(() => navigate("/login", { replace: true }), 800);
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await withTimeout(authService.register(identifier, password, name));
@@ -33,6 +43,7 @@ export default function Register() {
       const { data, error: err } = result;
       if (err) { setError(err.message || "Đăng ký thất bại"); return; }
       if (data) {
+        logSecurityEvent("new_signup", { identifier: identifier.trim().toLowerCase() });
         setSuccess("Đăng ký thành công!");
         setTimeout(() => navigate("/", { replace: true }), 800);
       }
@@ -69,6 +80,19 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+              <label htmlFor="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+            </div>
+
             <div>
               <Label className="text-xs uppercase tracking-wider text-white/60">Tên hiển thị</Label>
               <div className="relative mt-1.5">
@@ -113,4 +137,4 @@ export default function Register() {
       </div>
     </div>
   );
-}
+              }
