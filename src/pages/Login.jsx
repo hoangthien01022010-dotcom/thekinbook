@@ -128,9 +128,9 @@ export default function Login() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading || googleLoading}
-            className="w-full h-12 rounded-full bg-white/8 border border-white/12 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/12 active:scale-[0.98] transition disabled:opacity-60"
+            className="w-full h-12 rounded-full bg-white/[0.08] border border-white/[0.12] text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/[0.12] active:scale-[0.98] transition disabled:opacity-60"
           >
-            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="grid place-items-center w-5 h-5 rounded-full bg-white text-[#111] text-sm font-black">G</span>}
+            {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="grid place-items-center w-5 h-5 rounded-full bg-white text-background text-sm font-black">G</span>}
             Đăng nhập bằng Google
           </button>
 
