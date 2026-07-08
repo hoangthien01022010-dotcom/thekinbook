@@ -1,0 +1,51 @@
+-- ============================================================
+-- Bảo mật: log đăng nhập sai / bot đăng ký / rate-limit
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.security_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type text NOT NULL,
+  identifier text,
+  ip_address text,
+  user_agent text,
+  detail text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_logs_identifier_type_time
+  ON public.security_logs (identifier, event_type, created_at DESC);
+
+GRANT INSERT ON public.security_logs TO anon, authenticated;
+GRANT SELECT ON public.security_logs TO authenticated;
+GRANT ALL ON public.security_logs TO service_role;
+
+ALTER TABLE public.security_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anyone can insert security log" ON public.security_logs;
+DROP POLICY IF EXISTS "admin can read security logs" ON public.security_logs;
+
+CREATE POLICY "anyone can insert security log" ON public.security_logs
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+CREATE POLICY "admin can read security logs" ON public.security_logs
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE OR REPLACE FUNCTION public.check_rate_limit(
+  p_identifier text,
+  p_window_minutes integer DEFAULT 10,
+  p_max_attempts integer DEFAULT 5
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COUNT(*) >= p_max_attempts
+  FROM public.security_logs
+  WHERE identifier = p_identifier
+    AND event_type = 'failed_login'
+    AND created_at > now() - (p_window_minutes || ' minutes')::interval;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.check_rate_limit(text, integer, integer) TO anon, authenticated;
