@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "@/lib/auth";
 import { lovable } from "@/integrations/lovable/index";
+import { logSecurityEvent, isRateLimited } from "@/lib/securityLog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Lock, Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
@@ -25,13 +26,27 @@ export default function Login() {
     setError("");
     if (!identifier.trim()) return setError("Nhập tên đăng nhập");
     if (!password) return setError("Nhập mật khẩu");
+    const id = identifier.trim().toLowerCase();
     setLoading(true);
     try {
+      const blocked = await isRateLimited(id);
+      if (blocked) {
+        setError("Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 10 phút.");
+        logSecurityEvent("rate_limited", { identifier: id });
+        return;
+      }
       const result = await withTimeout(authService.login(identifier, password));
       if (result?.timeout) { setError("Đăng nhập quá lâu. Kiểm tra mạng rồi thử lại."); return; }
       const { data, error: err } = result;
-      if (err) { setError(err.message || "Đăng nhập thất bại"); return; }
-      if (data) navigate("/", { replace: true });
+      if (err) {
+        logSecurityEvent("failed_login", { identifier: id, detail: err.message });
+        setError(err.message || "Đăng nhập thất bại");
+        return;
+      }
+      if (data) {
+        logSecurityEvent("login_success", { identifier: id });
+        navigate("/", { replace: true });
+      }
     } catch {
       setError("Có lỗi xảy ra. Thử lại");
     } finally { setLoading(false); }
