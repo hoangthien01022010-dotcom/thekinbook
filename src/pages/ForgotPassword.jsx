@@ -30,7 +30,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
+    <div className="auth-shell min-h-screen w-full flex items-center justify-center p-4">
       <div className="w-full max-w-md glass-strong rounded-3xl p-8">
         <h1 className="text-2xl font-bold text-center mb-1">Đặt lại mật khẩu</h1>
         <p className="text-center text-sm text-white/60 mb-6">Nhanh gọn — không cần email</p>

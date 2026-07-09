@@ -1,7 +1,6 @@
 // Drop-in adapter that replaces the legacy base44 SDK with Supabase + Lovable AI.
 // Every base44.* call in the codebase resolves through here.
 import { supabase } from '@/lib/supabaseClient';
-import { lovable } from '@/integrations/lovable/index';
 
 // ---------------------------------------------------------------------------
 // Table name mapping (entity name -> Postgres table)
@@ -17,7 +16,6 @@ const TABLE = {
   AISettings: 'ai_settings',
   Report: 'reports',
   Post: 'posts',
-  SecurityLog: 'security_logs',
 };
 
 // ---------------------------------------------------------------------------
@@ -111,4 +109,154 @@ function makeEntity(name) {
       }
       return data;
     },
-    update: async
+    update: async (id, obj) => {
+      const { data, error } = await supabase
+        .from(table)
+        .update(obj)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) {
+        console.error(`[${table}] update error:`, error);
+        throw error;
+      }
+      return data;
+    },
+    delete: async (id) => {
+      const { error } = await supabase.from(table).delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    subscribe: (cb) => {
+      ensureChannel();
+      listeners.add(cb);
+      return () => {
+        listeners.delete(cb);
+      };
+    },
+  };
+}
+
+const entities = new Proxy(
+  {},
+  {
+    get: (cache, name) => {
+      if (!TABLE[name]) return undefined;
+      if (!cache[name]) cache[name] = makeEntity(name);
+      return cache[name];
+    },
+  },
+);
+
+// ---------------------------------------------------------------------------
+// auth namespace (replaces base44.auth.*)
+// ---------------------------------------------------------------------------
+const auth = {
+  me: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw Object.assign(new Error('Not authenticated'), { status: 401 });
+    return {
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0],
+    };
+  },
+  loginViaEmailPassword: async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  },
+  signUpViaEmailPassword: async (email, password) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  },
+  loginWithProvider: async (provider, redirect = '/') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin + redirect },
+    });
+    if (error) throw error;
+  },
+  logout: async (redirect) => {
+    await supabase.auth.signOut();
+    if (redirect) window.location.href = redirect;
+  },
+  redirectToLogin: () => {
+    window.location.href = '/login';
+  },
+  resetPasswordRequest: async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    if (error) throw error;
+  },
+  updatePassword: async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  },
+};
+
+// ---------------------------------------------------------------------------
+// integrations namespace
+//   - Core.InvokeLLM -> Lovable AI via edge function
+//   - Core.UploadFile -> Supabase Storage (bucket: 'uploads')
+// ---------------------------------------------------------------------------
+async function invokeAIChat({ prompt, messages }) {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify({ prompt, messages }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`AI error: ${res.status} ${text}`);
+  }
+  const data = await res.json();
+  return data.text || data.response || '';
+}
+
+async function uploadFile({ file }) {
+  if (!file) throw new Error('No file');
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('uploads').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+  if (error) {
+    console.error('upload error:', error);
+    throw error;
+  }
+  // Bucket is private — issue a long-lived signed URL (10 years).
+  const { data, error: signErr } = await supabase.storage
+    .from('uploads')
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr) {
+    console.error('sign url error:', signErr);
+    throw signErr;
+  }
+  return { file_url: data.signedUrl };
+}
+
+const integrations = {
+  Core: {
+    InvokeLLM: (args) => invokeAIChat(args),
+    UploadFile: (args) => uploadFile(args),
+  },
+};
+
+// Functions namespace (legacy no-op for any remaining call sites)
+const functions = { invoke: async () => ({ ok: true }) };
+
+export const base44 = { auth, entities, integrations, functions };
+export default base44;

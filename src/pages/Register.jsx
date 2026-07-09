@@ -52,7 +52,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden flex items-center justify-center p-4">
+    <div className="auth-shell min-h-screen w-full relative overflow-hidden flex items-center justify-center p-4">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
