@@ -100,4 +100,45 @@
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    }
+}
+
+@layer components {
+  .neon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 1.25rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #35eaff 0%, #6a5cff 50%, #ff0a6c 100%);
+    box-shadow: 0 10px 30px -10px rgba(53,234,255,0.55), 0 10px 30px -14px rgba(255,10,108,0.5);
+    transition: transform .15s ease, filter .2s ease;
+  }
+  .neon-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+  .neon-btn:active:not(:disabled) { transform: translateY(0) scale(.98); }
+
+  /* Auth screens: luôn tối, không phụ thuộc theme */
+  .auth-shell {
+    background: #05080a;
+    color: #fff;
+    background-image:
+      radial-gradient(900px 600px at 10% -10%, rgba(53,234,255,0.18), transparent 60%),
+      radial-gradient(800px 600px at 110% 10%, rgba(255,10,108,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 50% 120%, rgba(53,234,255,0.10), transparent 70%);
+  }
+  .auth-shell .glass-strong {
+    background: rgba(10,14,18,0.72);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .auth-shell input { color: #fff; }
+  .auth-shell input::placeholder { color: rgba(255,255,255,0.35); }
+
+  /* Light mode: heading & label rõ nét, không xám */
+  .light h1, .light h2, .light h3, .light h4 { color: hsl(222 47% 11%); }
+  .light label { color: hsl(222 47% 20%); }
+}
+
