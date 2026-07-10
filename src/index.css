@@ -265,13 +265,16 @@
   .light label { color: hsl(222 47% 20%); }
 
   .light, .light body { color: hsl(222 47% 11%); }
-  .light p, .light span, .light div, .light button, .light a, .light input, .light textarea, .light select {
+  .light :not(.auth-shell):not(.auth-shell *) {
     color: inherit;
   }
-  .light input, .light textarea, .light select {
+  .light :not(.auth-shell):not(.auth-shell *) input,
+  .light :not(.auth-shell):not(.auth-shell *) textarea,
+  .light :not(.auth-shell):not(.auth-shell *) select {
     color: hsl(222 47% 11%) !important;
   }
-  .light input::placeholder, .light textarea::placeholder {
+  .light :not(.auth-shell):not(.auth-shell *) input::placeholder,
+  .light :not(.auth-shell):not(.auth-shell *) textarea::placeholder {
     color: hsl(215 16% 40%) !important;
     opacity: 1;
   }
