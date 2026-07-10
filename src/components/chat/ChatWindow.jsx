@@ -286,7 +286,7 @@ Trả lời:`
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-gray-700 bg-white dark:bg-gray-900">
-        <button onClick={onBack} className="md:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+        <button onClick={onBack} className="kin-action kin-icon-btn md:hidden p-1">
           <ArrowLeft size={20} className="dark:text-gray-300" />
         </button>
         <Avatar 
@@ -312,7 +312,7 @@ Trả lời:`
           <button
             onClick={() => startCall('audio')}
             disabled={calling}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-40"
+            className="kin-action kin-icon-btn p-2 disabled:opacity-40"
             title="Gọi âm thanh"
           >
             <Phone size={18} className="text-blue-500" />
@@ -320,7 +320,7 @@ Trả lời:`
           <button
             onClick={() => startCall('video')}
             disabled={calling}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-40"
+            className="kin-action kin-icon-btn p-2 disabled:opacity-40"
             title="Gọi video"
           >
             <Video size={18} className="text-blue-500" />
@@ -397,13 +397,13 @@ Trả lời:`
           />
           <button 
             onClick={() => imageRef.current?.click()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full shrink-0"
+            className="kin-action kin-icon-btn p-2 shrink-0"
           >
             <Image size={20} className="text-blue-500" />
           </button>
           <button 
             onClick={() => fileRef.current?.click()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full shrink-0"
+            className="kin-action kin-icon-btn p-2 shrink-0"
           >
             <Paperclip size={20} className="text-blue-500" />
           </button>
@@ -414,16 +414,16 @@ Trả lời:`
               onKeyDown={handleKeyDown}
               placeholder="Aa"
               rows={1}
-              className="w-full resize-none px-4 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500 max-h-24"
+              className="kin-search w-full resize-none px-4 py-2 dark:text-white rounded-full text-sm outline-none max-h-24"
               style={{ minHeight: 36 }}
             />
           </div>
           <button 
             onClick={() => sendMessage(text.trim())}
             disabled={!text.trim() || sending}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full shrink-0 disabled:opacity-40"
+            className={`kin-action p-2 rounded-full shrink-0 disabled:opacity-40 ${text.trim() ? 'kin-primary-btn' : 'kin-icon-btn'}`}
           >
-            <Send size={20} className={text.trim() ? 'text-blue-500' : 'text-gray-400'} />
+            <Send size={20} className={text.trim() ? 'text-white' : 'text-gray-400'} />
           </button>
         </div>
       </div>

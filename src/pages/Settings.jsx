@@ -39,7 +39,7 @@ function Row({ label, children, hint }) {
     </div>
   );
 }
-const inputCls = 'w-full h-11 px-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm dark:text-white outline-none focus:border-violet-500';
+const inputCls = 'w-full h-11 px-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm dark:text-white outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -217,7 +217,7 @@ export default function Settings() {
                 <textarea rows={3} maxLength={160} className={`${inputCls} h-auto py-2.5 resize-none`} value={form.bio} onChange={(e) => setForm(f => ({ ...f, bio: e.target.value }))} placeholder="Vài dòng về bạn…"/>
               </Row>
               <div className="flex justify-end">
-                <button onClick={saveProfile} disabled={saving} className="h-11 px-5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 shadow disabled:opacity-60">
+                  <button onClick={saveProfile} disabled={saving} className="kin-action kin-primary-btn h-11 px-5 rounded-xl text-sm font-semibold disabled:opacity-60">
                   {saving ? 'Đang lưu…' : 'Lưu thay đổi'}
                 </button>
               </div>
@@ -247,7 +247,7 @@ export default function Settings() {
               </Row>
             </div>
             <div className="flex justify-end">
-              <button onClick={saveProfile} disabled={saving} className="h-11 px-5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-blue-600 shadow disabled:opacity-60">
+              <button onClick={saveProfile} disabled={saving} className="kin-action kin-primary-btn h-11 px-5 rounded-xl text-sm font-semibold disabled:opacity-60">
                 {saving ? 'Đang lưu…' : 'Lưu thay đổi'}
               </button>
             </div>
@@ -263,7 +263,7 @@ export default function Settings() {
               <Row label="Đổi mật khẩu">
                 <div className="flex gap-2">
                   <input type="password" className={inputCls} placeholder="Mật khẩu mới (≥ 6 ký tự)" value={newPw} onChange={(e) => setNewPw(e.target.value)}/>
-                  <button onClick={changePassword} disabled={pwBusy} className="shrink-0 h-11 px-4 rounded-xl text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 flex items-center gap-1.5 disabled:opacity-60">
+                  <button onClick={changePassword} disabled={pwBusy} className="kin-action kin-primary-btn shrink-0 h-11 px-4 rounded-xl text-sm font-semibold flex items-center gap-1.5 disabled:opacity-60">
                     <KeyRound size={16}/>{pwBusy ? '…' : 'Đổi'}
                   </button>
                 </div>
@@ -287,12 +287,13 @@ export default function Settings() {
               <div className="flex items-center gap-3">
                 {theme === 'dark' ? <Moon size={18} className="text-violet-400"/> : <Sun size={18} className="text-amber-500"/>}
                 <div>
-                  <p className="font-medium dark:text-white text-sm">Chế độ tối</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Dễ nhìn hơn vào ban đêm</p>
+                  <p className="font-medium dark:text-white text-sm">Hiệu ứng chủ đề toàn web</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Đổi sáng/tối kèm chuyển cảnh mượt</p>
                 </div>
               </div>
-              <button onClick={toggleTheme} className={`w-11 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-violet-600' : 'bg-gray-300'}`}>
-                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${theme === 'dark' ? 'translate-x-5' : ''}`}/>
+              <button onClick={toggleTheme} className={`kin-action theme-toggle ${theme === 'dark' ? 'is-dark' : ''}`} aria-label="Đổi chủ đề toàn web">
+                <span className="theme-toggle__icon">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                <span className="theme-toggle__knob" />
               </button>
             </div>
 
@@ -308,7 +309,7 @@ export default function Settings() {
                   setForm(f => ({ ...f, [it.key]: v }));
                   try { await base44.entities.UserProfile.update(profile.id, { [it.key]: v }); }
                   catch { toast.error('Không lưu được'); setForm(f => ({ ...f, [it.key]: !v })); }
-                }} className={`w-11 h-6 rounded-full relative transition-colors ${form[it.key] ? 'bg-violet-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                }} className={`kin-action w-11 h-6 rounded-full relative transition-colors ${form[it.key] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}>
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form[it.key] ? 'translate-x-5' : ''}`}/>
                 </button>
               </div>

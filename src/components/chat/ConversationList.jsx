@@ -88,19 +88,19 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
           <h1 className="text-xl font-bold dark:text-white">Đoạn chat</h1>
           <button
             onClick={onNewGroup}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="kin-action kin-icon-btn p-2"
             title="Tạo nhóm trò chuyện"
           >
             <Users size={20} className="dark:text-gray-300" />
           </button>
         </div>
-        <div className="relative">
+        <div className="kin-search relative rounded-full">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm đoạn chat"
-            className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 bg-transparent dark:text-white rounded-full text-sm outline-none"
           />
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
         {/* ViBai always pinned first */}
         <button
           onClick={() => onOpenVibai && onOpenVibai()}
-          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800/60"
+          className="kin-action w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800/60"
         >
           <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-violet-500 via-fuchsia-500 to-blue-500 flex items-center justify-center shrink-0 shadow-md">
             <img src="/kinbook-logo.svg" alt="ViBai" className="w-9 h-9"/>
@@ -145,7 +145,7 @@ export default function ConversationList({ currentUserId, profile, selectedId, o
               >
                 <button
                   onClick={() => onSelect(conv)}
-                  className="flex-1 flex items-center gap-3 min-w-0 text-left"
+                  className="kin-action flex-1 flex items-center gap-3 min-w-0 text-left rounded-xl"
                 >
                   <Avatar
                     src={display.avatar}

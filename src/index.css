@@ -268,13 +268,23 @@
   }
 
   .light .text-blue-500,
+  .light .text-blue-600 {
+    color: hsl(213 94% 45%) !important;
+  }
   .light .text-violet-500,
-  .light .text-violet-600,
+  .light .text-violet-600 {
+    color: hsl(263 75% 50%) !important;
+  }
   .light .text-red-500,
-  .light .text-red-600,
+  .light .text-red-600 {
+    color: hsl(0 72% 45%) !important;
+  }
   .light .text-green-500,
+  .light .text-green-600 {
+    color: hsl(142 72% 34%) !important;
+  }
   .light .text-amber-500 {
-    color: currentColor;
+    color: hsl(38 92% 45%) !important;
   }
 
   /* Bottom pill navigation — thiếu class gây "mất nút bấm" */
