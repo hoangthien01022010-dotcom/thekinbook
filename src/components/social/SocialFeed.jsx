@@ -66,12 +66,12 @@ function CommentThread({ postId, currentUserId, profile, onCountChange }) {
           ))}
         </div>
       )}
-      <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2">
         <Avatar src={profile?.avatar_url} name={profile?.display_name} size={30}/>
-        <div className="flex-1 flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3">
+        <div className="kin-search flex-1 flex items-center rounded-full px-3">
           {replyTo && <span className="text-xs text-violet-600 mr-2 shrink-0 flex items-center gap-1">Trả lời {replyTo.author_name} <button onClick={() => setReplyTo(null)}><X size={12}/></button></span>}
           <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} placeholder="Viết bình luận…" className="flex-1 bg-transparent py-2 outline-none text-sm dark:text-white"/>
-          <button onClick={send} disabled={!text.trim() || busy} className="text-violet-600 disabled:opacity-40 p-1"><Send size={16}/></button>
+          <button onClick={send} disabled={!text.trim() || busy} className={`kin-action rounded-full disabled:opacity-40 p-1 ${text.trim() ? 'kin-primary-btn' : 'kin-icon-btn'}`}><Send size={16}/></button>
         </div>
       </div>
     </div>
@@ -257,13 +257,13 @@ export default function SocialFeed() {
                 </div>
               )}
               <div className="flex items-center justify-between mt-2">
-                <button onClick={pickImage} className="text-violet-600 p-2 rounded-full hover:bg-violet-50 dark:hover:bg-violet-950" title="Thêm ảnh">
+                <button onClick={pickImage} className="kin-action kin-icon-btn p-2" title="Thêm ảnh">
                   <ImageIcon size={18}/>
                 </button>
                 <div className="flex items-center gap-3">
                   <span className={`text-sm ${overLimit ? 'text-red-500' : 'text-gray-500'}`}>{remaining}</span>
                   <button onClick={createPost} disabled={(!content.trim() && !imageFile) || overLimit || posting}
-                    className="px-5 py-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 text-white font-semibold text-sm disabled:opacity-50">
+                    className="kin-action kin-primary-btn px-5 py-1.5 rounded-full font-semibold text-sm disabled:opacity-50">
                     {posting ? '…' : 'Đăng'}
                   </button>
                 </div>

@@ -54,10 +54,16 @@
 @layer base {
     * { @apply border-border; }
   html, body, #root { height: 100%; }
+  html {
+    background: hsl(var(--background));
+    transition: background-color .45s ease, color .45s ease;
+  }
   body {
     @apply bg-background text-foreground;
     background-color: hsl(var(--background));
     overflow-x: hidden;
+    color: hsl(var(--foreground));
+    transition: background-color .45s ease, color .45s ease;
   }
   
   /* Chỉ có hiệu ứng gradient ở dark mode */
@@ -71,6 +77,30 @@
 }
 
 @layer components {
+  .theme-sweep {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483646;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(.92);
+    background:
+      radial-gradient(circle at 78% 16%, hsl(var(--primary) / .22), transparent 34%),
+      radial-gradient(circle at 18% 84%, hsl(var(--accent) / .18), transparent 38%),
+      hsl(var(--background) / .72);
+    backdrop-filter: blur(0px);
+  }
+
+  .theme-sweep.is-active {
+    animation: theme-sweep .76s cubic-bezier(.22, 1, .36, 1);
+  }
+
+  html.theme-changing *, html.theme-changing *::before, html.theme-changing *::after {
+    transition-property: background-color, border-color, color, box-shadow, opacity, transform, filter;
+    transition-duration: .45s;
+    transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+
   .glass {
     background: hsl(var(--card) / 0.6);
     backdrop-filter: blur(16px) saturate(140%);
@@ -84,6 +114,99 @@
     -webkit-backdrop-filter: blur(22px) saturate(160%);
     border: 1px solid hsl(var(--border));
   }
+
+  .kin-action {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .kin-action::after {
+    content: '';
+    position: absolute;
+    inset: -60% auto -60% -45%;
+    width: 42%;
+    transform: skewX(-18deg) translateX(-120%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent);
+    opacity: 0;
+    z-index: -1;
+  }
+  .kin-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px -18px hsl(var(--primary) / .55);
+  }
+  .kin-action:hover:not(:disabled)::after { animation: action-shine .72s ease; }
+  .kin-action:active:not(:disabled) { transform: translateY(0) scale(.96); }
+
+  .kin-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / .08);
+    border: 1px solid hsl(var(--primary) / .1);
+  }
+  .kin-icon-btn:hover:not(:disabled) {
+    background: hsl(var(--primary) / .14);
+    border-color: hsl(var(--primary) / .22);
+  }
+
+  .kin-primary-btn {
+    color: hsl(var(--primary-foreground));
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(195 96% 46%) 52%, hsl(var(--accent)) 100%);
+    box-shadow: 0 12px 28px -14px hsl(var(--primary) / .7), 0 10px 24px -18px hsl(var(--accent) / .55);
+  }
+
+  .kin-search {
+    position: relative;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / .72);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+  }
+  .kin-search:focus-within {
+    transform: translateY(-1px);
+    background: hsl(var(--card));
+    border-color: hsl(var(--primary) / .55);
+    box-shadow: 0 12px 30px -20px hsl(var(--primary) / .65), 0 0 0 4px hsl(var(--primary) / .12);
+  }
+
+  .theme-toggle {
+    position: relative;
+    width: 4.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(135deg, hsl(45 96% 86%), hsl(198 92% 78%));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 12px 26px -18px hsl(var(--primary) / .8);
+  }
+  .theme-toggle.is-dark {
+    background: linear-gradient(135deg, hsl(222 46% 14%), hsl(263 70% 38%));
+  }
+  .theme-toggle__knob {
+    position: absolute;
+    top: .22rem;
+    left: .24rem;
+    width: 1.78rem;
+    height: 1.78rem;
+    border-radius: 9999px;
+    background: hsl(0 0% 100%);
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,.45);
+    transition: transform .35s cubic-bezier(.22,1,.36,1);
+  }
+  .theme-toggle.is-dark .theme-toggle__knob { transform: translateX(1.96rem); }
+  .theme-toggle__icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 1.84rem;
+    font-size: .9rem;
+    line-height: 1;
+  }
+  .theme-toggle.is-dark .theme-toggle__icon { padding-right: 0; padding-left: 1.84rem; }
+
 
   /* Fix switch tím -> xanh Messenger */
   button[role="switch"][data-state="checked"] {
@@ -141,6 +264,21 @@
   .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 { color: hsl(222 47% 11%); }
   .light label { color: hsl(222 47% 20%); }
 
+  .light, .light body { color: hsl(222 47% 11%); }
+  .light :not(.auth-shell):not(.auth-shell *) {
+    color: inherit;
+  }
+  .light :not(.auth-shell):not(.auth-shell *) input,
+  .light :not(.auth-shell):not(.auth-shell *) textarea,
+  .light :not(.auth-shell):not(.auth-shell *) select {
+    color: hsl(222 47% 11%) !important;
+  }
+  .light :not(.auth-shell):not(.auth-shell *) input::placeholder,
+  .light :not(.auth-shell):not(.auth-shell *) textarea::placeholder {
+    color: hsl(215 16% 40%) !important;
+    opacity: 1;
+  }
+
   /* Light mode: ép các class chữ trắng/xám nhạt thành đen dễ đọc,
      nhưng KHÔNG đụng vào .auth-shell (auth luôn nền tối) */
   .light :not(.auth-shell):not(.auth-shell *).text-white,
@@ -149,7 +287,49 @@
   .light :not(.auth-shell):not(.auth-shell *).text-gray-300 { color: hsl(222 47% 15%) !important; }
   .light :not(.auth-shell):not(.auth-shell *).text-gray-400,
   .light :not(.auth-shell):not(.auth-shell *).text-gray-500 { color: hsl(215 25% 32%) !important; }
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-600,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-700,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-800,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-900 { color: hsl(222 47% 13%) !important; }
   .light .text-muted-foreground { color: hsl(215 25% 30%) !important; }
+
+  .light .bg-clip-text.text-transparent {
+    color: transparent !important;
+  }
+
+  .light .kin-primary-btn,
+  .light .kin-primary-btn *,
+  .light .pill-item.is-active,
+  .light .pill-item.is-active *,
+  .light .neon-btn,
+  .light .neon-btn * {
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  .light [class*="bg-black"],
+  .light [class*="bg-black"] * {
+    color: #fff !important;
+  }
+
+  .light .text-blue-500,
+  .light .text-blue-600 {
+    color: hsl(213 94% 45%) !important;
+  }
+  .light .text-violet-500,
+  .light .text-violet-600 {
+    color: hsl(263 75% 50%) !important;
+  }
+  .light .text-red-500,
+  .light .text-red-600 {
+    color: hsl(0 72% 45%) !important;
+  }
+  .light .text-green-500,
+  .light .text-green-600 {
+    color: hsl(142 72% 34%) !important;
+  }
+  .light .text-amber-500 {
+    color: hsl(38 92% 45%) !important;
+  }
 
   /* Bottom pill navigation — thiếu class gây "mất nút bấm" */
   .pill-nav {
@@ -186,5 +366,23 @@
   }
   .pill-item .pill-label { display: none; }
   .pill-item.is-active .pill-label { display: inline; }
+}
+
+@keyframes action-shine {
+  0% { opacity: 0; transform: skewX(-18deg) translateX(-140%); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: skewX(-18deg) translateX(420%); }
+}
+
+@keyframes theme-sweep {
+  0% { opacity: 0; transform: scale(.92); clip-path: circle(0% at 86% 12%); backdrop-filter: blur(0px); }
+  35% { opacity: 1; transform: scale(1); clip-path: circle(78% at 86% 12%); backdrop-filter: blur(5px); }
+  100% { opacity: 0; transform: scale(1.02); clip-path: circle(142% at 86% 12%); backdrop-filter: blur(0px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-sweep.is-active, .kin-action:hover:not(:disabled)::after { animation: none; }
+  html.theme-changing *, html.theme-changing *::before, html.theme-changing *::after { transition-duration: .01ms !important; }
+  .kin-action:hover:not(:disabled), .kin-search:focus-within { transform: none; }
 }
 
