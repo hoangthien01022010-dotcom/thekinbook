@@ -171,6 +171,42 @@
     box-shadow: 0 12px 30px -20px hsl(var(--primary) / .65), 0 0 0 4px hsl(var(--primary) / .12);
   }
 
+  .theme-toggle {
+    position: relative;
+    width: 4.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(135deg, hsl(45 96% 86%), hsl(198 92% 78%));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 12px 26px -18px hsl(var(--primary) / .8);
+  }
+  .theme-toggle.is-dark {
+    background: linear-gradient(135deg, hsl(222 46% 14%), hsl(263 70% 38%));
+  }
+  .theme-toggle__knob {
+    position: absolute;
+    top: .22rem;
+    left: .24rem;
+    width: 1.78rem;
+    height: 1.78rem;
+    border-radius: 9999px;
+    background: hsl(0 0% 100%);
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,.45);
+    transition: transform .35s cubic-bezier(.22,1,.36,1);
+  }
+  .theme-toggle.is-dark .theme-toggle__knob { transform: translateX(1.96rem); }
+  .theme-toggle__icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-right: 1.84rem;
+    font-size: .9rem;
+    line-height: 1;
+  }
+  .theme-toggle.is-dark .theme-toggle__icon { padding-right: 0; padding-left: 1.84rem; }
+
 
   /* Fix switch tím -> xanh Messenger */
   button[role="switch"][data-state="checked"] {
@@ -265,6 +301,11 @@
   .light .neon-btn,
   .light .neon-btn * {
     color: hsl(var(--primary-foreground)) !important;
+  }
+
+  .light [class*="bg-black"],
+  .light [class*="bg-black"] * {
+    color: #fff !important;
   }
 
   .light .text-blue-500,
