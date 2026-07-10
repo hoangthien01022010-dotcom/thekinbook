@@ -138,7 +138,53 @@
   .auth-shell input::placeholder { color: rgba(255,255,255,0.35); }
 
   /* Light mode: heading & label rõ nét, không xám */
-  .light h1, .light h2, .light h3, .light h4 { color: hsl(222 47% 11%); }
+  .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 { color: hsl(222 47% 11%); }
   .light label { color: hsl(222 47% 20%); }
+
+  /* Light mode: ép các class chữ trắng/xám nhạt thành đen dễ đọc,
+     nhưng KHÔNG đụng vào .auth-shell (auth luôn nền tối) */
+  .light :not(.auth-shell):not(.auth-shell *).text-white,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-100,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-200,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-300 { color: hsl(222 47% 15%) !important; }
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-400,
+  .light :not(.auth-shell):not(.auth-shell *).text-gray-500 { color: hsl(215 25% 32%) !important; }
+  .light .text-muted-foreground { color: hsl(215 25% 30%) !important; }
+
+  /* Bottom pill navigation — thiếu class gây "mất nút bấm" */
+  .pill-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid hsl(var(--border));
+    border-radius: 9999px;
+    box-shadow: 0 12px 32px -18px rgba(0,0,0,0.5);
+  }
+  .pill-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 9999px;
+    color: hsl(var(--foreground) / 0.75);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+  .pill-item:hover { color: hsl(var(--foreground)); background: hsl(var(--foreground) / 0.06); }
+  .pill-item.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, #35eaff 0%, #6a5cff 55%, #ff0a6c 100%);
+    box-shadow: 0 8px 22px -10px rgba(53,234,255,0.55), 0 8px 22px -12px rgba(255,10,108,0.5);
+  }
+  .pill-item .pill-label { display: none; }
+  .pill-item.is-active .pill-label { display: inline; }
 }
 
