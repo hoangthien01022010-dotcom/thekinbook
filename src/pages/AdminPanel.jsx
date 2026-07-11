@@ -15,8 +15,60 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [dmTarget, setDmTarget] = useState(null);
+  const [dmText, setDmText] = useState('');
+  const [dmSending, setDmSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState(null);
 
   useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+      if (user) {
+        const { data: p } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle();
+        setCurrentProfile(p);
+      }
+    })();
+  }, []);
+
+  const sendDM = async () => {
+    if (!dmTarget || !dmText.trim() || !currentUserId) return;
+    setDmSending(true);
+    try {
+      const targetUserId = dmTarget.user_id;
+      const convs = await base44.entities.Conversation.filter({ type: 'direct' });
+      let conv = convs.find(c => c.participant_ids?.includes(currentUserId) && c.participant_ids?.includes(targetUserId) && c.participant_ids.length === 2);
+      if (!conv) {
+        conv = await base44.entities.Conversation.create({
+          type: 'direct',
+          participant_ids: [currentUserId, targetUserId],
+          participant_names: [currentProfile?.display_name || 'Admin', dmTarget.display_name || 'User'],
+          created_by: currentUserId,
+        });
+      }
+      await base44.entities.Message.create({
+        conversation_id: conv.id,
+        sender_id: currentUserId,
+        sender_name: currentProfile?.display_name || 'Admin',
+        content: dmText.trim(),
+        type: 'text',
+      });
+      await base44.entities.Notification.create({
+        user_id: targetUserId, type: 'message', title: '📨 Tin nhắn từ Admin',
+        content: dmText.trim().slice(0, 100),
+        from_user_id: currentUserId,
+        from_user_name: currentProfile?.display_name || 'Admin',
+        from_user_avatar: currentProfile?.avatar_url,
+      });
+      setDmText(''); setDmTarget(null);
+      alert('Đã gửi tin nhắn!');
+    } catch (e) {
+      alert('Lỗi: ' + e.message);
+    } finally {
+      setDmSending(false);
+    }
+  };
     loadData();
   }, []);
 
