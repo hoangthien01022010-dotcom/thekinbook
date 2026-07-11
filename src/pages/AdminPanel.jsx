@@ -123,7 +123,7 @@ export default function AdminPanel() {
     const prof = users.find(u => u.id === profileId);
     await base44.entities.Notification.create({
       user_id: prof?.user_id, type: 'ban', title: type === 'permanent' ? 'Khóa tài khoản vĩnh viễn' : 'Khóa tài khoản tạm thời',
-      body: type === 'permanent' ? 'Tài khoản đã bị khóa vĩnh viễn.' : 'Tài khoản đã bị khóa 7 ngày.'
+      content: type === 'permanent' ? 'Tài khoản đã bị khóa vĩnh viễn.' : 'Tài khoản đã bị khóa 7 ngày.'
     });
     loadData();
   };
