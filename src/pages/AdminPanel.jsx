@@ -273,6 +273,33 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+
+      {dmTarget && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setDmTarget(null)}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <Avatar src={dmTarget.avatar_url} name={dmTarget.display_name} size={44} />
+              <div>
+                <p className="font-bold dark:text-white">Nhắn cho {dmTarget.display_name}</p>
+                <p className="text-xs text-gray-500">Tin nhắn sẽ vào hộp thư & thông báo</p>
+              </div>
+            </div>
+            <textarea
+              value={dmText}
+              onChange={e => setDmText(e.target.value)}
+              placeholder="Nhập tin nhắn..."
+              rows={4}
+              className="w-full p-3 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setDmTarget(null)} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white text-sm">Huỷ</button>
+              <button onClick={sendDM} disabled={dmSending || !dmText.trim()} className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-1.5">
+                <Send size={14} /> {dmSending ? 'Đang gửi...' : 'Gửi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
