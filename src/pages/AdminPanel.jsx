@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import Avatar from '@/components/chat/Avatar';
-import { ArrowLeft, Shield, Users, AlertTriangle, Lock, Unlock, Eye, Ban, MessageSquareWarning, Bot } from 'lucide-react';
+import { ArrowLeft, Shield, Users, AlertTriangle, Lock, Unlock, Eye, Ban, MessageSquareWarning, Bot, MessageCircle, Send } from 'lucide-react';
 import AISettingsTab from '@/components/admin/AISettingsTab';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
