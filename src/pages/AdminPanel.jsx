@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import Avatar from '@/components/chat/Avatar';
-import { ArrowLeft, Shield, Users, AlertTriangle, Lock, Unlock, Eye, Ban, MessageSquareWarning, Bot } from 'lucide-react';
+import { ArrowLeft, Shield, Users, AlertTriangle, Lock, Unlock, Eye, Ban, MessageSquareWarning, Bot, MessageCircle, Send } from 'lucide-react';
 import AISettingsTab from '@/components/admin/AISettingsTab';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
@@ -14,10 +15,63 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [dmTarget, setDmTarget] = useState(null);
+  const [dmText, setDmText] = useState('');
+  const [dmSending, setDmSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState(null);
 
   useEffect(() => {
-    loadData();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+      if (user) {
+        const { data: p } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle();
+        setCurrentProfile(p);
+      }
+    })();
   }, []);
+
+  const sendDM = async () => {
+    if (!dmTarget || !dmText.trim() || !currentUserId) return;
+    setDmSending(true);
+    try {
+      const targetUserId = dmTarget.user_id;
+      const convs = await base44.entities.Conversation.filter({ type: 'direct' });
+      let conv = convs.find(c => c.participant_ids?.includes(currentUserId) && c.participant_ids?.includes(targetUserId) && c.participant_ids.length === 2);
+      if (!conv) {
+        conv = await base44.entities.Conversation.create({
+          type: 'direct',
+          participant_ids: [currentUserId, targetUserId],
+          participant_names: [currentProfile?.display_name || 'Admin', dmTarget.display_name || 'User'],
+          created_by: currentUserId,
+        });
+      }
+      await base44.entities.Message.create({
+        conversation_id: conv.id,
+        sender_id: currentUserId,
+        sender_name: currentProfile?.display_name || 'Admin',
+        content: dmText.trim(),
+        type: 'text',
+      });
+      await base44.entities.Notification.create({
+        user_id: targetUserId, type: 'message', title: '📨 Tin nhắn từ Admin',
+        content: dmText.trim().slice(0, 100),
+        from_user_id: currentUserId,
+        from_user_name: currentProfile?.display_name || 'Admin',
+        from_user_avatar: currentProfile?.avatar_url,
+      });
+      setDmText(''); setDmTarget(null);
+      alert('Đã gửi tin nhắn!');
+    } catch (e) {
+      alert('Lỗi: ' + e.message);
+    } finally {
+      setDmSending(false);
+    }
+  };
+
+  useEffect(() => { loadData(); }, []);
+
 
   const loadData = async () => {
     setLoading(true);
@@ -48,13 +102,13 @@ export default function AdminPanel() {
     await base44.entities.UserProfile.update(profileId, { warnings: newWarnings });
     await base44.entities.Notification.create({
       user_id: userId, type: 'warning', title: 'Cảnh cáo',
-      body: `Bạn đã nhận cảnh cáo lần thứ ${newWarnings} do vi phạm quy tắc cộng đồng.`
+      content: `Bạn đã nhận cảnh cáo lần thứ ${newWarnings} do vi phạm quy tắc cộng đồng.`
     });
     if (newWarnings >= 3) {
       await base44.entities.UserProfile.update(profileId, { chat_disabled: true });
       await base44.entities.Notification.create({
         user_id: userId, type: 'ban', title: 'Tạm khóa nhắn tin',
-        body: 'Bạn đã bị tạm khóa chức năng nhắn tin do vi phạm nhiều lần.'
+        content: 'Bạn đã bị tạm khóa chức năng nhắn tin do vi phạm nhiều lần.'
       });
     }
     loadData();
@@ -69,7 +123,7 @@ export default function AdminPanel() {
     const prof = users.find(u => u.id === profileId);
     await base44.entities.Notification.create({
       user_id: prof?.user_id, type: 'ban', title: type === 'permanent' ? 'Khóa tài khoản vĩnh viễn' : 'Khóa tài khoản tạm thời',
-      body: type === 'permanent' ? 'Tài khoản đã bị khóa vĩnh viễn.' : 'Tài khoản đã bị khóa 7 ngày.'
+      content: type === 'permanent' ? 'Tài khoản đã bị khóa vĩnh viễn.' : 'Tài khoản đã bị khóa 7 ngày.'
     });
     loadData();
   };
@@ -148,6 +202,9 @@ export default function AdminPanel() {
                   {u.warnings > 0 && <p className="text-xs text-orange-500">⚠️ {u.warnings} cảnh cáo</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <button onClick={() => setDmTarget(u)} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" title="Nhắn tin">
+                    <MessageCircle size={16} className="text-blue-500" />
+                  </button>
                   {!u.is_banned ? (
                     <>
                       <button onClick={() => warnUser(u.user_id, u.id)} className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg" title="Cảnh cáo">
@@ -216,6 +273,33 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+
+      {dmTarget && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setDmTarget(null)}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <Avatar src={dmTarget.avatar_url} name={dmTarget.display_name} size={44} />
+              <div>
+                <p className="font-bold dark:text-white">Nhắn cho {dmTarget.display_name}</p>
+                <p className="text-xs text-gray-500">Tin nhắn sẽ vào hộp thư & thông báo</p>
+              </div>
+            </div>
+            <textarea
+              value={dmText}
+              onChange={e => setDmText(e.target.value)}
+              placeholder="Nhập tin nhắn..."
+              rows={4}
+              className="w-full p-3 rounded-lg border dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setDmTarget(null)} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white text-sm">Huỷ</button>
+              <button onClick={sendDM} disabled={dmSending || !dmText.trim()} className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-1.5">
+                <Send size={14} /> {dmSending ? 'Đang gửi...' : 'Gửi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
