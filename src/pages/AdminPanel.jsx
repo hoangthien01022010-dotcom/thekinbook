@@ -102,13 +102,13 @@ export default function AdminPanel() {
     await base44.entities.UserProfile.update(profileId, { warnings: newWarnings });
     await base44.entities.Notification.create({
       user_id: userId, type: 'warning', title: 'Cảnh cáo',
-      body: `Bạn đã nhận cảnh cáo lần thứ ${newWarnings} do vi phạm quy tắc cộng đồng.`
+      content: `Bạn đã nhận cảnh cáo lần thứ ${newWarnings} do vi phạm quy tắc cộng đồng.`
     });
     if (newWarnings >= 3) {
       await base44.entities.UserProfile.update(profileId, { chat_disabled: true });
       await base44.entities.Notification.create({
         user_id: userId, type: 'ban', title: 'Tạm khóa nhắn tin',
-        body: 'Bạn đã bị tạm khóa chức năng nhắn tin do vi phạm nhiều lần.'
+        content: 'Bạn đã bị tạm khóa chức năng nhắn tin do vi phạm nhiều lần.'
       });
     }
     loadData();
