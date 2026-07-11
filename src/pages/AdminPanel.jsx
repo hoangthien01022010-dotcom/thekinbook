@@ -202,6 +202,9 @@ export default function AdminPanel() {
                   {u.warnings > 0 && <p className="text-xs text-orange-500">⚠️ {u.warnings} cảnh cáo</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <button onClick={() => setDmTarget(u)} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg" title="Nhắn tin">
+                    <MessageCircle size={16} className="text-blue-500" />
+                  </button>
                   {!u.is_banned ? (
                     <>
                       <button onClick={() => warnUser(u.user_id, u.id)} className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg" title="Cảnh cáo">
