@@ -69,8 +69,9 @@ export default function AdminPanel() {
       setDmSending(false);
     }
   };
-    loadData();
-  }, []);
+
+  useEffect(() => { loadData(); }, []);
+
 
   const loadData = async () => {
     setLoading(true);
