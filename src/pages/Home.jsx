@@ -11,6 +11,7 @@ import NewChatModal from '@/components/chat/NewChatModal';
 import NewGroupModal from '@/components/chat/NewGroupModal';
 import ConversationInfo from '@/components/chat/ConversationInfo';
 import SocialFeed from '@/components/social/SocialFeed';
+import CommunityServer from '@/components/community/CommunityServer';
 import { MessageCircle, Users, Bell, Settings, Shield, UsersRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notifyNewMessage, notifyGeneric, ensureNotificationPermission } from '@/lib/notificationService';
